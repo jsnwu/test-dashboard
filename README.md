@@ -1,14 +1,24 @@
 # Test Dashboard
 
-A fork of https://github.com/shvydak/yshvydak-test-dashboard with a good twist.
+Forked and customized from `shvydak/yshvydak-test-dashboard` for local workflows and repo-internal reporter development.
+
+Key changes in this fork:
+
+- Focus the product on **dashboard-only** workflows (viewing, triage), remove rerun tests or test discovery
+- Add **Results tabs** to browse all runs, with drill-down into a single run’s tests
+- Improve filtering (search by **test name** and `@tags`)
+- Add **project** configuration + filtering
+- Add **target environment** configuration + filtering
+
+>
 
 > 🎭 **Modern, full-stack dashboard for Playwright tests with one-click rerun capabilities**
 
 A comprehensive testing dashboard that transforms your Playwright test experience with real-time monitoring, instant reruns, and beautiful reporting. Built for teams who value efficiency and visibility in their testing workflows.
 
-> **📦 npm Package Available**: [`playwright-dashboard-reporter`](https://www.npmjs.com/package/playwright-dashboard-reporter) - Professional npm package for seamless integration.
+> **📦 Reporter is included in this repo**: `playwright-dashboard-reporter` lives in `packages/reporter` and is used by the dashboard and by Playwright runs from this project.
 
-![Dashboard Screenshot](https://via.placeholder.com/800x400/2563eb/ffffff?text=YShvydak+Test+Dashboard)
+<!-- Add a real screenshot if/when available -->
 
 ## ✨ Why This Dashboard?
 
@@ -45,10 +55,10 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 
 ### ⚡ **Simple Reporter Integration**
 
-- **Works with npm package**: Install `playwright-dashboard-reporter` in your test project
-- **Zero configuration**: No changes to `playwright.config.ts` needed
-- **Automatic injection**: Dashboard adds reporter via CLI flag when running tests
-- **Clean separation**: Your existing reporters continue to work unchanged
+- **Repo-local reporter**: `playwright-dashboard-reporter` is developed in-tree (`packages/reporter`)
+- **Dashboard-run tests**: The dashboard starts Playwright with the reporter automatically
+- **CLI-run tests**: You can add the reporter in your `playwright.config.ts` (example below)
+- **Clean separation**: Your existing reporters can continue to work unchanged
 
 ### 🔍 **Advanced Diagnostics**
 
@@ -100,28 +110,24 @@ npm install
 npm run build
 ```
 
-### 2. Install Reporter in Your Test Project
+### 2. Reporter (included in this repo)
 
-```bash
-# Navigate to your Playwright project
-cd /path/to/your/playwright/project
+This fork includes the reporter as a workspace package at `packages/reporter`.
 
-# Install the reporter
-npm install --save-dev playwright-dashboard-reporter
-```
+- If you run tests **through the dashboard**, you don’t need to install anything in your Playwright project — the dashboard starts Playwright with the bundled reporter.
+- If you want to run Playwright yourself (outside the dashboard) and still report into the dashboard, point Playwright at the local reporter package.
 
-**Important:** No changes to `playwright.config.ts` are needed. The Dashboard automatically adds the reporter when running tests via CLI flag `--reporter=playwright-dashboard-reporter`.
-
-Your `playwright.config.ts` remains unchanged and can keep existing reporters:
+Example `playwright.config.ts`:
 
 ```typescript
-// playwright.config.ts - NO CHANGES NEEDED
 import {defineConfig} from '@playwright/test'
 
 export default defineConfig({
     reporter: [
-        ['html'], // Your existing reporters continue to work
+        ['html'],
         ['list'],
+        // Local reporter from this monorepo:
+        ['playwright-dashboard-reporter', {apiBaseUrl: process.env.DASHBOARD_API_BASE_URL}],
     ],
 })
 ```
@@ -162,13 +168,12 @@ The dashboard will be available at:
 - **Web UI**: http://localhost:3000 (or your VITE_PORT value)
 - **API**: http://localhost:3001 (or your PORT value)
 
-### 5. Login and Discover Tests
+### 5. Login
 
 1. **Open the dashboard** in your browser
 2. **Login** with your admin credentials (admin@admin.com / qwe123 for development)
-3. **Click "Discover Tests"** to scan your project
-4. **Run tests** directly from the UI or rerun failed ones
-5. **Monitor results** in real-time!
+3. **Run tests** from the UI or rerun failed ones
+4. **Monitor results** in real-time
 
 ## 📖 Usage Guide
 
@@ -176,7 +181,6 @@ The dashboard will be available at:
 
 #### From Dashboard (Recommended)
 
-- **Discover Tests**: Scans your Playwright project for all available tests
 - **Run All**: Execute all tests with live monitoring
 - **Run by File**: Run specific test files
 - **Rerun Failed**: One-click rerun of any failed test
@@ -217,11 +221,11 @@ curl http://localhost:3001/api/tests/diagnostics
 
 1. **Tests not appearing**: Check `PLAYWRIGHT_PROJECT_DIR` environment variable
 2. **Reporter not working**:
-    - Verify `playwright-dashboard-reporter` is installed: `npm list playwright-dashboard-reporter`
+    - If running via dashboard: ensure the dashboard is running and `PLAYWRIGHT_PROJECT_DIR` points to the correct test project
+    - If running via CLI: ensure your `playwright.config.ts` includes `playwright-dashboard-reporter` in `reporter: [...]`
     - Check Dashboard is running and `PLAYWRIGHT_PROJECT_DIR` points to correct test project
     - Dashboard passes `DASHBOARD_API_URL` to reporter automatically via environment
 3. **Connection issues**: Ensure dashboard is running on correct port
-4. **Package not found errors**: Run `npm install --save-dev playwright-dashboard-reporter` in your test project
 5. **Test count inconsistency**: If test discovery shows different counts than after test execution:
     - Discovery finds fewer tests: Check if all test files are being scanned properly
     - Fewer tests after execution: Usually resolved by API limit parameters (dashboard uses `limit=200`)
@@ -233,10 +237,12 @@ curl http://localhost:3001/api/tests/diagnostics
 
 ```
 packages/
-├── core/      # Shared TypeScript types
-├── reporter/  # Playwright reporter source code
-├── server/    # Express API + SQLite + WebSocket
-└── web/       # React + Vite dashboard UI
+├── core/      # Shared TypeScript types (workspace: test-dashboard-core)
+├── reporter/  # Reporter package source (workspace build tooling)
+├── server/    # Express API + SQLite + WebSocket (workspace: test-dashboard-server)
+└── web/       # React + Vite dashboard UI (workspace: test-dashboard-web)
+
+playwright-dashboard-reporter/ # Local reporter package (published name: playwright-dashboard-reporter)
 ```
 
 ### Web shell (desktop sidebar)
@@ -247,7 +253,7 @@ On `md` breakpoints and wider, the primary navigation uses a **fixed-width left 
 
 The dashboard uses **dynamic reporter injection** - no changes needed to your `playwright.config.ts`:
 
-1. **npm Package**: Dashboard uses `playwright-dashboard-reporter` from your test project's `node_modules`
+1. **Repo package**: Dashboard uses the in-repo `packages/reporter` workspace
 2. **Test Discovery**: Dashboard scans your project with `playwright test --list`
 3. **Dynamic Injection**: When running tests, adds `--reporter=playwright-dashboard-reporter` CLI flag
 4. **Clean Separation**: Your `playwright.config.ts` stays unchanged
@@ -368,12 +374,10 @@ When using the reporter from your own `playwright.config.ts`, set **`targetEnv`*
 
 ## 🛣️ Roadmap
 
-### Phase 1: npm Package Integration ✅
+### Phase 1: Reporter + Dashboard Integration ✅
 
-- Published `playwright-dashboard-reporter` to npm registry
-- One-command installation: `npm install --save-dev playwright-dashboard-reporter`
+- Reporter is developed in-repo (`packages/reporter`)
 - Automatic mode switching based on `NODE_ENV`
-- npm link support for local development
 - Full dashboard functionality
 
 ### Phase 2: Enterprise Features (Future) 🔮

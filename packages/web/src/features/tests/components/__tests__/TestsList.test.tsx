@@ -3,7 +3,7 @@ import {render, screen, waitFor} from '@testing-library/react'
 import {BrowserRouter, MemoryRouter, useSearchParams} from 'react-router-dom'
 import TestsList from '../TestsList'
 import {useTestsStore} from '../../store/testsStore'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 // Mock the store
 vi.mock('../../store/testsStore', () => ({
@@ -25,6 +25,11 @@ vi.mock('../testDetail', () => ({
             {isOpen && test ? `Modal: ${test.name}` : 'Modal closed'}
         </div>
     ),
+}))
+
+// TestsList uses useFlakyTests (react-query). Mock it to avoid QueryClientProvider in these unit tests.
+vi.mock('@features/dashboard', () => ({
+    useFlakyTests: () => ({data: []}),
 }))
 
 const mockTests: TestResult[] = [
@@ -52,13 +57,14 @@ const mockTests: TestResult[] = [
 
 describe('TestsList - Shareable URLs', () => {
     const mockOnTestSelect = vi.fn()
-    const mockOnTestRerun = vi.fn()
+    const mockSelectExecution = vi.fn()
 
     beforeEach(() => {
         vi.clearAllMocks()
         vi.mocked(useTestsStore).mockReturnValue({
             tests: mockTests,
             error: null,
+            selectExecution: mockSelectExecution,
         } as any)
     })
 
@@ -68,7 +74,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?testId=test-abc123']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -91,7 +96,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?testId=nonexistent']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -110,16 +114,12 @@ describe('TestsList - Shareable URLs', () => {
             vi.mocked(useTestsStore).mockReturnValue({
                 tests: [],
                 error: null,
+                selectExecution: mockSelectExecution,
             } as any)
 
             render(
                 <MemoryRouter initialEntries={['/?testId=test-abc123']}>
-                    <TestsList
-                        onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
-                        selectedTest={null}
-                        loading={true}
-                    />
+                    <TestsList onTestSelect={mockOnTestSelect} selectedTest={null} loading={true} />
                 </MemoryRouter>
             )
 
@@ -131,7 +131,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?testId=test-abc123']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -147,7 +146,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?testId=test-abc123']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -165,16 +163,12 @@ describe('TestsList - Shareable URLs', () => {
             vi.mocked(useTestsStore).mockReturnValue({
                 tests: [],
                 error: null,
+                selectExecution: mockSelectExecution,
             } as any)
 
             render(
                 <BrowserRouter>
-                    <TestsList
-                        onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
-                        selectedTest={null}
-                        loading={true}
-                    />
+                    <TestsList onTestSelect={mockOnTestSelect} selectedTest={null} loading={true} />
                 </BrowserRouter>
             )
 
@@ -185,13 +179,13 @@ describe('TestsList - Shareable URLs', () => {
             vi.mocked(useTestsStore).mockReturnValue({
                 tests: [],
                 error: 'Failed to load tests',
+                selectExecution: mockSelectExecution,
             } as any)
 
             render(
                 <BrowserRouter>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -207,7 +201,6 @@ describe('TestsList - Shareable URLs', () => {
                 <BrowserRouter>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -225,7 +218,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?testId=test-xyz789']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -244,7 +236,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?someParam=value']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -269,13 +260,13 @@ describe('TestsList - Shareable URLs', () => {
             vi.mocked(useTestsStore).mockReturnValue({
                 tests: [...mockTests, hyphenatedTest],
                 error: null,
+                selectExecution: mockSelectExecution,
             } as any)
 
             render(
                 <MemoryRouter initialEntries={['/?testId=test-with-many-hyphens']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -296,7 +287,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=failed']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -315,7 +305,6 @@ describe('TestsList - Shareable URLs', () => {
                     <MemoryRouter initialEntries={[`/?filter=${filter}`]}>
                         <TestsList
                             onTestSelect={mockOnTestSelect}
-                            onTestRerun={mockOnTestRerun}
                             selectedTest={null}
                             loading={false}
                         />
@@ -332,7 +321,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=invalid']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -348,7 +336,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=failed&testId=test-abc123']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -373,7 +360,6 @@ describe('TestsList - Shareable URLs', () => {
                         <div data-testid="filter-param">{searchParams.get('filter') || 'none'}</div>
                         <TestsList
                             onTestSelect={mockOnTestSelect}
-                            onTestRerun={mockOnTestRerun}
                             selectedTest={null}
                             loading={false}
                         />
@@ -405,7 +391,6 @@ describe('TestsList - Shareable URLs', () => {
                         </div>
                         <TestsList
                             onTestSelect={mockOnTestSelect}
-                            onTestRerun={mockOnTestRerun}
                             selectedTest={null}
                             loading={false}
                         />
@@ -439,7 +424,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -455,7 +439,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=Failed']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -471,7 +454,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=passed']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />
@@ -485,7 +467,6 @@ describe('TestsList - Shareable URLs', () => {
                 <MemoryRouter initialEntries={['/?filter=failed']}>
                     <TestsList
                         onTestSelect={mockOnTestSelect}
-                        onTestRerun={mockOnTestRerun}
                         selectedTest={null}
                         loading={false}
                     />

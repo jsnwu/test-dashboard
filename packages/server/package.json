@@ -1,5 +1,5 @@
 {
-    "name": "@yshvydak/test-dashboard-server",
+    "name": "test-dashboard-server",
     "version": "1.8.0",
     "description": "Backend server for yshvydak-test-dashboard",
     "main": "dist/index.js",
@@ -22,11 +22,10 @@
         "server",
         "api"
     ],
-    "author": "Yurii Shvydak <y.shvydak@gmail.com>",
     "license": "MIT",
     "dependencies": {
         "@types/multer": "^2.0.0",
-        "@yshvydak/core": "^1.8.0",
+        "test-dashboard-core": "^1.8.2",
         "cors": "^2.8.5",
         "dotenv": "^17.2.3",
         "express": "^4.18.0",

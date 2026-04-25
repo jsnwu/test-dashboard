@@ -73,20 +73,59 @@ export class TestRepository extends BaseRepository implements ITestRepository {
     }
 
     async getAllTests(filters: TestFilters): Promise<TestResult[]> {
-        let sql = `
-            SELECT ${TEST_RESULT_WITH_RELATIONS_COLUMNS}
-            FROM test_results tr
-            LEFT JOIN attachments a ON tr.id = a.test_result_id
-            LEFT JOIN test_notes tn ON tr.test_id = tn.test_id
-        `
-        const params: any[] = []
+        const limit = filters.limit || DEFAULT_LIMITS.TESTS_PER_PAGE
+        const params: unknown[] = []
+        let sql: string
 
         if (filters.runId) {
-            sql += ` WHERE tr.run_id = ?`
+            const runMetaParts: string[] = []
             params.push(filters.runId)
+            if (filters.project) {
+                runMetaParts.push(`json_extract(r.metadata, '$.project') = ?`)
+                params.push(filters.project)
+            }
+            if (filters.targetEnv) {
+                runMetaParts.push(`json_extract(r.metadata, '$.targetEnv') = ?`)
+                params.push(filters.targetEnv)
+            }
+            const runMetaSql = runMetaParts.length ? ` AND ${runMetaParts.join(' AND ')}` : ''
+            sql = `
+                SELECT ${TEST_RESULT_WITH_RELATIONS_COLUMNS}
+                FROM test_results tr
+                LEFT JOIN test_runs r ON tr.run_id = r.id
+                LEFT JOIN attachments a ON tr.id = a.test_result_id
+                LEFT JOIN test_notes tn ON tr.test_id = tn.test_id
+                WHERE tr.run_id = ?
+                ${runMetaSql}
+            `
+        } else if (filters.project || filters.targetEnv) {
+            const innerConditions: string[] = []
+            const innerParams: unknown[] = []
+            if (filters.project) {
+                innerConditions.push(`json_extract(r0.metadata, '$.project') = ?`)
+                innerParams.push(filters.project)
+            }
+            if (filters.targetEnv) {
+                innerConditions.push(`json_extract(r0.metadata, '$.targetEnv') = ?`)
+                innerParams.push(filters.targetEnv)
+            }
+            const innerWhere = innerConditions.join(' AND ')
+            sql = `
+                SELECT ${TEST_RESULT_WITH_RELATIONS_COLUMNS}
+                FROM (
+                    SELECT
+                        tr0.*,
+                        ROW_NUMBER() OVER (PARTITION BY tr0.test_id ORDER BY tr0.updated_at DESC) AS rn
+                    FROM test_results tr0
+                    INNER JOIN test_runs r0 ON tr0.run_id = r0.id
+                    WHERE ${innerWhere}
+                ) tr
+                LEFT JOIN attachments a ON tr.id = a.test_result_id
+                LEFT JOIN test_notes tn ON tr.test_id = tn.test_id
+                WHERE tr.rn = 1
+            `
+            params.push(...innerParams)
         } else {
-            // Pick the latest execution per test_id with a window function (O(N log N))
-            // instead of a correlated subquery (O(N^2)) — important once history grows.
             sql = `
                 SELECT ${TEST_RESULT_WITH_RELATIONS_COLUMNS}
                 FROM (
@@ -101,13 +140,12 @@ export class TestRepository extends BaseRepository implements ITestRepository {
         }
 
         if (filters.status) {
-            sql += filters.runId ? ` AND` : ` AND`
-            sql += ` tr.status = ?`
+            sql += ` AND tr.status = ?`
             params.push(filters.status)
         }
 
         sql += ` ORDER BY tr.updated_at DESC LIMIT ?`
-        params.push(filters.limit || DEFAULT_LIMITS.TESTS_PER_PAGE)
+        params.push(limit)
 
         const rows = await this.queryAll<TestResultRow>(sql, params)
         return this.mapRowsToTestResults(rows)

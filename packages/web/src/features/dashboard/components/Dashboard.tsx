@@ -3,7 +3,7 @@ import {useSearchParams} from 'react-router-dom'
 import {useTestsStore} from '@features/tests/store/testsStore'
 import {useDashboardStats, useFlakyTests, useTestTimeline} from '../hooks'
 import {DashboardStats} from './DashboardStats'
-import {AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts'
+import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts'
 import {useQueryClient} from '@tanstack/react-query'
 import {useWebSocket} from '@/hooks/useWebSocket'
 import {getWebSocketUrl} from '@features/authentication/utils/webSocketUrl'
@@ -267,7 +267,7 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <ResponsiveContainer width="100%" height={240}>
-                            <AreaChart
+                            <BarChart
                                 data={timelineData}
                                 margin={{top: 10, right: 10, left: 0, bottom: 0}}>
                                 <CartesianGrid
@@ -296,34 +296,21 @@ export default function Dashboard() {
                                     }}
                                     labelStyle={{color: 'rgb(156 163 175)'}}
                                 />
-                                <Area
-                                    type="monotone"
+                                <Bar
                                     dataKey="passed"
                                     stackId="1"
-                                    stroke="rgb(34 197 94)"
                                     fill="rgb(34 197 94)"
-                                    fillOpacity={0.6}
+                                    fillOpacity={0.8}
                                     name="Passed"
                                 />
-                                <Area
-                                    type="monotone"
+                                <Bar
                                     dataKey="failed"
                                     stackId="1"
-                                    stroke="rgb(239 68 68)"
                                     fill="rgb(239 68 68)"
-                                    fillOpacity={0.6}
+                                    fillOpacity={0.8}
                                     name="Failed"
                                 />
-                                <Area
-                                    type="monotone"
-                                    dataKey="skipped"
-                                    stackId="1"
-                                    stroke="rgb(156 163 175)"
-                                    fill="rgb(156 163 175)"
-                                    fillOpacity={0.6}
-                                    name="Skipped"
-                                />
-                            </AreaChart>
+                            </BarChart>
                         </ResponsiveContainer>
                     )}
                 </div>

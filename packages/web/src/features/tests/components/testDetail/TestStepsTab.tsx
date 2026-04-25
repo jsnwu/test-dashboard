@@ -1,4 +1,4 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {formatDuration} from '../../utils/formatters'
 
 export interface TestStepsTabProps {

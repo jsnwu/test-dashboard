@@ -51,11 +51,27 @@ Results will appear in your Dashboard automatically! 🎉
 ## Configuration Options
 
 ```typescript
-interface ReporterOptions {
-    apiBaseUrl?: string // Dashboard API URL (default: http://localhost:3001)
-    silent?: boolean // Suppress console output (default: false)
-    timeout?: number // API request timeout in ms (default: 30000)
+interface DashboardReporterOptions {
+    /** Dashboard API base URL (default: http://localhost:3001) */
+    apiBaseUrl?: string
+    /** Human-readable run title in the dashboard (`test_runs.run_name`) */
+    runName?: string
+    /** Stored on the run as `metadata.project` for dashboard filtering */
+    project?: string
+    silent?: boolean // Reserved
+    timeout?: number // Reserved
 }
+```
+
+Use in `playwright.config.ts`:
+
+```typescript
+reporter: [
+    [
+        'playwright-dashboard-reporter',
+        {apiBaseUrl: 'http://localhost:3001', runName: 'CI main', project: 'chromium'},
+    ],
+]
 ```
 
 ## Environment Variables
@@ -65,6 +81,10 @@ The reporter supports the following environment variables:
 ````bash
 # Required: Dashboard API endpoint
 DASHBOARD_API_URL=http://localhost:3001
+
+# Optional: run display name and project bucket (same as reporter options)
+DASHBOARD_RUN_NAME=nightly-staging
+DASHBOARD_PROJECT=my-app
 
 ## Dashboard Features
 

@@ -33,38 +33,25 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
 export function formatLastRun(test: any): string {
     if (test.status === 'pending') {
-        return 'N/A'
+        return '—'
     }
 
     const dateValue =
         test.updatedAt || test.updated_at || test.createdAt || test.created_at || test.timestamp
 
     if (!dateValue) {
-        return 'N/A'
+        return '—'
     }
 
     try {
         const date = new Date(dateValue)
         if (isNaN(date.getTime())) {
-            return 'N/A'
+            return '—'
         }
 
-        // Use system timezone (automatically uses browser's locale timezone)
-        // This ensures the time matches the user's system clock
-        const formattedDateTime = date.toLocaleString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hourCycle: 'h23',
-        })
-
-        // Format: "DD/MM/YYYY, HH:MM:SS" -> "HH:MM:SS DD/MM/YYYY"
-        const [datePart, timePart] = formattedDateTime.split(', ')
-        return `${timePart} ${datePart}`
+        // Match Results page formatting (local timezone + locale).
+        return date.toLocaleString(undefined, {dateStyle: 'medium', timeStyle: 'short'})
     } catch {
-        return 'N/A'
+        return '—'
     }
 }

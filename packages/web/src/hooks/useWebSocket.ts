@@ -19,55 +19,21 @@ export function useWebSocket(url: string | null, options?: WebSocketOptions) {
     const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
     const wsRef = useRef<WebSocket | null>(null)
     const queryClient = useQueryClient()
-    const {
-        fetchTests,
-        fetchRuns,
-        setGroupRunning,
-        setTestRunning,
-        setRunningAllTests,
-        updateProgress,
-        clearProgress,
-    } = useTestsStore()
+    const {fetchTests, fetchRuns, updateProgress, clearProgress} = useTestsStore()
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
     const reconnectAttempts = useRef(0)
     const maxReconnectAttempts = 5
 
     const handleConnectionStatus = (statusData: any) => {
-        const {activeRuns, activeGroups: _activeGroups, isAnyProcessRunning} = statusData
+        const {activeRuns, isAnyProcessRunning} = statusData
 
-        // Clear all current running states first
-        setRunningAllTests(false)
-
-        // Clear any existing running test/group states
-        // Note: In a real implementation, we might want to track and clear these individually
-        // For now, we rely on the store to handle this properly
-
-        // Restore states based on active processes
-        if (isAnyProcessRunning && activeRuns.length > 0) {
-            activeRuns.forEach((run: any) => {
-                switch (run.type) {
-                    case 'run-all':
-                        setRunningAllTests(true)
-                        break
-                    case 'run-group':
-                        if (run.details.filePath) {
-                            setGroupRunning(run.details.filePath, true)
-                        }
-                        break
-                    case 'rerun':
-                        if (run.details.originalTestId) {
-                            setTestRunning(run.details.originalTestId, true)
-                        }
-                        break
-                }
-
-                // Restore progress if available
+        if (isAnyProcessRunning && activeRuns?.length) {
+            for (const run of activeRuns) {
                 if (run.progress) {
                     updateProgress(run.progress)
                 }
-            })
+            }
         } else {
-            // Ensure all states are cleared
             clearProgress()
         }
 
@@ -206,21 +172,6 @@ export function useWebSocket(url: string | null, options?: WebSocketOptions) {
 
                 // Clear progress when run completes
                 clearProgress()
-
-                // Clear group running state if this was a group run
-                if (message.data?.type === 'run-group' && message.data?.filePath) {
-                    setGroupRunning(message.data.filePath, false)
-                }
-
-                // Clear run-all state if this was a run-all
-                if (message.data?.type === 'run-all') {
-                    setRunningAllTests(false)
-                }
-
-                // Clear individual test running state if this was a rerun
-                if (message.data?.isRerun && message.data?.originalTestId) {
-                    setTestRunning(message.data.originalTestId, false)
-                }
 
                 // Notify about run completion
                 if (options?.onRunCompleted) {

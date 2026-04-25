@@ -1,4 +1,4 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 function getEntryStyle(type: string) {
     switch (type) {

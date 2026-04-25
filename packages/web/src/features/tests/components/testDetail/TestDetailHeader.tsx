@@ -10,9 +10,8 @@ export interface TestDetailHeaderProps {
     onClose: () => void
     onBackToLatest: () => void
     onDelete?: () => void
-    onRerun?: () => void
-    isRunning?: boolean
-    isAnyTestRunning?: boolean
+    /** When set (e.g. user opened detail from Results), show a link back to Results. */
+    onBackToResults?: () => void
 }
 
 export function TestDetailHeader({
@@ -23,9 +22,7 @@ export function TestDetailHeader({
     onClose,
     onBackToLatest,
     onDelete,
-    onRerun,
-    isRunning,
-    isAnyTestRunning,
+    onBackToResults,
 }: TestDetailHeaderProps) {
     const [copied, setCopied] = useState(false)
 
@@ -42,6 +39,16 @@ export function TestDetailHeader({
     return (
         <div className="flex items-start md:items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 gap-3">
             <div className="flex-1 min-w-0">
+                {onBackToResults && (
+                    <div className="mb-2">
+                        <button
+                            type="button"
+                            onClick={onBackToResults}
+                            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
+                            ← Back to results
+                        </button>
+                    </div>
+                )}
                 <div className="flex items-center space-x-2 md:space-x-3 mb-1">
                     <StatusBadge status={testStatus as any} />
                     <h2
@@ -76,8 +83,9 @@ export function TestDetailHeader({
                             Viewing execution: {formatLastRun({createdAt: executionDate})}
                         </span>
                         <button
+                            type="button"
                             onClick={onBackToLatest}
-                            className="text-xs md:text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors">
+                            className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 md:hidden">
                             ← Back to latest
                         </button>
                     </div>
@@ -91,17 +99,6 @@ export function TestDetailHeader({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Mobile: Show Run button instead of Delete */}
-                {onRerun && (
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={onRerun}
-                        disabled={isRunning || isAnyTestRunning}
-                        className="md:hidden">
-                        {isRunning ? 'Running...' : '▶️ Run'}
-                    </Button>
-                )}
                 {/* Desktop: Show Delete button */}
                 {onDelete && (
                     <Button

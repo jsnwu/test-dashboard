@@ -11,7 +11,27 @@ import * as path from 'path'
 import * as fs from 'fs'
 import {v4 as uuidv4} from 'uuid'
 import * as dotenv from 'dotenv'
+import {parseDashboardTargetEnv, type DashboardTargetEnv} from 'test-dashboard-core'
 dotenv.config()
+
+/** Playwright reporter tuple options: `['playwright-dashboard-reporter', { ... }]` */
+export interface DashboardReporterOptions {
+    /** Dashboard API base URL (no `/api` suffix). */
+    apiBaseUrl?: string
+    /** Human-readable run title in the dashboard. Env: `DASHBOARD_RUN_NAME` */
+    runName?: string
+    /** Stored on the run as `metadata.project` for dashboard filtering. Env: `DASHBOARD_PROJECT` */
+    project?: string
+    /**
+     * Target deployment env stored on runs/results as `metadata.targetEnv` (same role as `project`).
+     * Env: `DASHBOARD_TARGET_ENV`. Does not filter which tests execute.
+     */
+    targetEnv?: string
+    /** Suppress reporter console output (reserved). */
+    silent?: boolean
+    /** API request timeout in ms (reserved). */
+    timeout?: number
+}
 
 function normalizeTestPath(filePath: string): string {
     const prefixesToRemove = ['e2e/tests/', 'e2e\\tests\\', 'tests/', 'tests\\', 'e2e/', 'e2e\\']
@@ -56,6 +76,8 @@ interface YShvydakTestResult {
         contentType: string
     }>
     metadata?: {
+        project?: string
+        targetEnv?: string
         steps?: TestStep[]
         console?: {
             entries: ConsoleEntry[]
@@ -66,6 +88,7 @@ interface YShvydakTestResult {
 
 interface YShvydakTestRun {
     id: string
+    runName?: string | null
     status: 'running' | 'completed' | 'failed'
     timestamp: string
     totalTests: number
@@ -100,14 +123,16 @@ class YShvydakReporter implements Reporter {
     private results: YShvydakTestResult[] = []
     private startTime: number = 0
     private apiBaseUrl: string
+    private readonly runName?: string
+    private readonly project?: string
+    private readonly targetEnv?: DashboardTargetEnv
     private readonly consoleEntriesByResult = new WeakMap<TestResult, ConsoleEntry[]>()
     private readonly consoleWasTruncatedByResult = new WeakMap<TestResult, boolean>()
     private static readonly MAX_CONSOLE_LINES = 500
     private static readonly MAX_CONSOLE_CHARS = 200_000
 
-    constructor() {
-        // Get the base URL from environment variables
-        let baseUrl = process.env.DASHBOARD_API_URL || 'http://localhost:3001'
+    constructor(options: DashboardReporterOptions = {}) {
+        let baseUrl = options.apiBaseUrl || process.env.DASHBOARD_API_URL || 'http://localhost:3001'
 
         // Remove trailing /api if present (for backward compatibility)
         if (baseUrl.endsWith('/api')) {
@@ -119,8 +144,24 @@ class YShvydakReporter implements Reporter {
         // Use RUN_ID from environment if provided by dashboard, otherwise generate new one
         this.runId = process.env.RUN_ID || process.env.RERUN_ID || uuidv4()
 
+        const rn = options.runName ?? process.env.DASHBOARD_RUN_NAME
+        this.runName = typeof rn === 'string' && rn.trim() !== '' ? rn.trim() : undefined
+        const pj = options.project ?? process.env.DASHBOARD_PROJECT
+        this.project = typeof pj === 'string' && pj.trim() !== '' ? pj.trim() : undefined
+        const te = options.targetEnv ?? process.env.DASHBOARD_TARGET_ENV
+        this.targetEnv = parseDashboardTargetEnv(te)
+
         console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId})`)
         console.log(`🌐 API Base URL: ${this.apiBaseUrl}`)
+        if (this.runName) {
+            console.log(`📝 Run name: ${this.runName}`)
+        }
+        if (this.project) {
+            console.log(`📁 Project tag: ${this.project}`)
+        }
+        if (this.targetEnv) {
+            console.log(`🎯 Target env tag: ${this.targetEnv}`)
+        }
 
         if (!this.apiBaseUrl || this.apiBaseUrl === 'undefined') {
             console.warn(
@@ -141,18 +182,22 @@ class YShvydakReporter implements Reporter {
         this.captureConsoleChunk('stderr', chunk, test, result)
     }
 
-    onBegin(_config: FullConfig, suite: Suite) {
+    async onBegin(_config: FullConfig, suite: Suite) {
         this.startTime = Date.now()
+        const totalTests = suite.allTests().length
+
+        await this.registerRunAtStart(totalTests)
+
         const processType = process.env.RERUN_MODE === 'true' ? 'rerun' : 'run-all'
 
         // Notify dashboard that process is starting
-        this.notifyProcessStart({
+        await this.notifyProcessStart({
             runId: this.runId,
             type: processType,
-            totalTests: suite.allTests().length,
+            totalTests,
         })
 
-        console.log(`🚀 Starting test run with ${suite.allTests().length} tests`)
+        console.log(`🚀 Starting test run with ${totalTests} tests`)
     }
 
     onTestBegin(test: TestCase) {
@@ -208,6 +253,8 @@ class YShvydakReporter implements Reporter {
             errorStack: result.error?.stack,
             attachments: this.processAttachments(result.attachments),
             metadata: {
+                ...(this.project ? {project: this.project} : {}),
+                ...(this.targetEnv ? {targetEnv: this.targetEnv} : {}),
                 steps: steps.length > 0 ? steps : undefined,
                 console:
                     consoleEntries.length > 0
@@ -289,6 +336,7 @@ class YShvydakReporter implements Reporter {
         // Update test run
         await this.updateTestRun({
             id: this.runId,
+            ...(this.runName ? {runName: this.runName} : {}),
             status: result.status === 'passed' ? 'completed' : 'failed',
             timestamp: new Date().toISOString(),
             totalTests: this.results.length,
@@ -484,6 +532,55 @@ class YShvydakReporter implements Reporter {
         } catch (error) {
             const duration = Date.now() - startTime
             console.warn(`⚠️  Dashboard API not available (${duration}ms): ${error}`)
+        }
+    }
+
+    /**
+     * Creates the `test_runs` row with `run_name` and `metadata.project` so the dashboard
+     * can filter and display the run before the first result is persisted.
+     */
+    private async registerRunAtStart(totalTests: number): Promise<void> {
+        const processType = process.env.RERUN_MODE === 'true' ? 'rerun' : 'run-all'
+        const metadata: Record<string, unknown> = {
+            type: processType,
+            triggeredFrom: 'playwright-reporter',
+        }
+        if (this.project) {
+            metadata.project = this.project
+        }
+        if (this.targetEnv) {
+            metadata.targetEnv = this.targetEnv
+        }
+
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/runs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: this.runId,
+                    runName: this.runName ?? null,
+                    status: 'running',
+                    totalTests,
+                    passedTests: 0,
+                    failedTests: 0,
+                    skippedTests: 0,
+                    duration: 0,
+                    metadata,
+                }),
+            })
+
+            if (!response.ok) {
+                const responseText = await response.text()
+                console.warn(
+                    `⚠️  Failed to register test run (${response.status}): ${responseText || 'empty body'}`
+                )
+            } else {
+                console.log(`✅ Test run registered with dashboard: ${this.runId}`)
+            }
+        } catch (error) {
+            console.warn(`⚠️  Test run registration failed: ${error}`)
         }
     }
 

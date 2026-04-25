@@ -1,4 +1,6 @@
-# YShvydak Test Dashboard
+# Test Dashboard
+
+A fork of https://github.com/shvydak/yshvydak-test-dashboard with a good twist.
 
 > 🎭 **Modern, full-stack dashboard for Playwright tests with one-click rerun capabilities**
 
@@ -88,8 +90,8 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 
 ```bash
 # Clone the dashboard
-git clone https://github.com/yshvydak/yshvydak-test-dashboard.git
-cd yshvydak-test-dashboard
+git clone <your-fork-or-repo-url>
+cd test-dashboard
 
 # Install dependencies
 npm install
@@ -237,6 +239,10 @@ packages/
 └── web/       # React + Vite dashboard UI
 ```
 
+### Web shell (desktop sidebar)
+
+On `md` breakpoints and wider, the primary navigation uses a **fixed-width left sidebar of 210px** (Tailwind `w-[210px]` on the desktop `<aside>` in `packages/web/src/shared/components/Header.tsx`). Narrower viewports use the top bar and slide-in drawer instead.
+
 ### Dynamic Reporter Integration
 
 The dashboard uses **dynamic reporter injection** - no changes needed to your `playwright.config.ts`:
@@ -290,8 +296,8 @@ cd packages/reporter && npm run dev # Reporter package
 
 Per-package:
 
-- Server: `npm test --workspace=@yshvydak/test-dashboard-server`
-- Web: `npm test --workspace=@yshvydak/web`
+- Server: `npm test --workspace=test-dashboard-server`
+- Web: `npm test --workspace=test-dashboard-web`
 - Reporter: `npm test --workspace=playwright-dashboard-reporter`
 
 More details: [TESTING.md](docs/TESTING.md)
@@ -315,6 +321,9 @@ ADMIN_EMAIL=admin@admin.com                  # Admin user email
 ADMIN_PASSWORD=qwe123                        # Admin user password
 JWT_SECRET=dev-jwt-secret-change-in-production-12345    # JWT signing key
 
+# Optional: default target env for runs started from the dashboard (passed to reporter as DASHBOARD_TARGET_ENV → metadata.targetEnv)
+# DASHBOARD_TARGET_ENV=staging
+
 # All other variables are derived automatically:
 # - DASHBOARD_API_URL = BASE_URL (for API integration)
 # - VITE_API_BASE_URL = BASE_URL/api (for web API calls)
@@ -323,6 +332,10 @@ JWT_SECRET=dev-jwt-secret-change-in-production-12345    # JWT signing key
 
 # Advanced users can still override any derived variable
 ```
+
+**Target environment (`DASHBOARD_TARGET_ENV`):** When set to `local`, `staging`, or `prod`, it is forwarded to Playwright processes the dashboard spawns as `DASHBOARD_TARGET_ENV`, so the reporter can stamp **`metadata.targetEnv`** on runs and results (same pattern as `DASHBOARD_PROJECT` → `metadata.project`). It does **not** change which tests are discovered or executed. Omit the variable or set `all` to leave target env unset for those runs. The web UI filters saved data by target env using the **Target env** control (URL query `env=`).
+
+When using the reporter from your own `playwright.config.ts`, set **`targetEnv`** in the reporter options tuple (or `DASHBOARD_TARGET_ENV` in the environment); reporter `options.targetEnv` wins over the env var for that process.
 
 **Port Management:**
 
@@ -420,10 +433,3 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Built with [Playwright](https://playwright.dev/) - the amazing testing framework
 - Inspired by the need for better test visibility and team collaboration
 - Thanks to all contributors who help improve the testing experience
-
----
-
-<div align="center">
-  <strong>Happy Testing! 🎭</strong><br>
-  Made with ❤️ by <a href="mailto:y.shvydak@gmail.com">Yurii Shvydak</a>
-</div>

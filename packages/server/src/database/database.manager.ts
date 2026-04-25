@@ -5,6 +5,7 @@ import {Logger} from '../utils/logger.util'
 
 export interface TestRunData {
     id: string
+    runName?: string | null
     status: 'running' | 'completed' | 'failed'
     totalTests: number
     passedTests: number
@@ -12,6 +13,8 @@ export interface TestRunData {
     skippedTests: number
     duration: number
     metadata?: any
+    createdAt?: string
+    updatedAt?: string
 }
 
 export interface TestResultData {
@@ -156,10 +159,26 @@ export class DatabaseManager {
                 Logger.error('Failed to initialize database schema:', error)
                 reject(error)
             } else {
-                Logger.critical('Database schema initialized successfully')
-                resolve()
+                this.ensureSchemaUpgrades()
+                    .then(() => {
+                        Logger.critical('Database schema initialized successfully')
+                        resolve()
+                    })
+                    .catch((upgradeError) => {
+                        Logger.error('Failed to apply schema upgrades:', upgradeError)
+                        reject(upgradeError)
+                    })
             }
         })
+    }
+
+    private async ensureSchemaUpgrades(): Promise<void> {
+        const columns = await this.all(`PRAGMA table_info(test_runs)`)
+        const hasRunName = columns.some((c: any) => c?.name === 'run_name')
+
+        if (!hasRunName) {
+            await this.run('ALTER TABLE test_runs ADD COLUMN run_name TEXT')
+        }
     }
 
     // Helper method to promisify database operations
@@ -202,12 +221,13 @@ export class DatabaseManager {
     // Test Runs
     async createTestRun(runData: TestRunData): Promise<void> {
         const sql = `
-            INSERT INTO test_runs (id, status, total_tests, passed_tests, failed_tests, skipped_tests, duration, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO test_runs (id, run_name, status, total_tests, passed_tests, failed_tests, skipped_tests, duration, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
 
         await this.run(sql, [
             runData.id,
+            runData.runName ?? null,
             runData.status,
             runData.totalTests,
             runData.passedTests,
@@ -245,6 +265,10 @@ export class DatabaseManager {
         if (updates.duration !== undefined) {
             setParts.push('duration = ?')
             values.push(updates.duration)
+        }
+        if (updates.runName !== undefined) {
+            setParts.push('run_name = ?')
+            values.push(updates.runName)
         }
         if (updates.metadata !== undefined) {
             setParts.push('metadata = ?')
@@ -293,6 +317,20 @@ export class DatabaseManager {
     // Test Results
     async saveTestResult(testData: TestResultData & {timestamp?: string}): Promise<string> {
         const timestamp = (testData as any).timestamp || new Date().toISOString()
+
+        // Some reporters can emit test-result events before the "run started" event
+        // that creates a test_runs row. Ensure the parent exists to satisfy the FK.
+        if (testData.runId) {
+            await this.run(
+                `
+                    INSERT OR IGNORE INTO test_runs
+                    (id, status, total_tests, passed_tests, failed_tests, skipped_tests, duration, metadata)
+                    VALUES (?, 'running', 0, 0, 0, 0, 0, NULL)
+                `,
+                [testData.runId]
+            )
+        }
+
         const insertSql = `
             INSERT INTO test_results
             (id, run_id, test_id, name, file_path, status, duration, error_message, error_stack, retry_count, metadata, created_at, updated_at)
@@ -394,8 +432,12 @@ export class DatabaseManager {
     }
 
     // Utility methods
-    async getStats(): Promise<any> {
-        const stats = await this.get(`
+    async getStats(project?: string): Promise<any> {
+        const whereClause = project ? `WHERE json_extract(metadata, '$.project') = ?` : ''
+        const params = project ? [project] : []
+
+        const stats = await this.get(
+            `
             SELECT 
                 COUNT(*) as total_runs,
                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_runs,
@@ -404,7 +446,10 @@ export class DatabaseManager {
                 SUM(failed_tests) as total_failed,
                 SUM(skipped_tests) as total_skipped
             FROM test_runs
-        `)
+            ${whereClause}
+        `,
+            params
+        )
 
         return stats
     }

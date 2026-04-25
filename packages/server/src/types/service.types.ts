@@ -90,6 +90,9 @@ export interface TestResult extends TestResultData {
 export interface TestFilters {
     runId?: string
     status?: string
+    project?: string
+    /** Latest row per test_id from runs tagged with this target env (`metadata.targetEnv`). */
+    targetEnv?: string
     limit?: number
 }
 
@@ -136,4 +139,5 @@ export interface IRunRepository {
     createTestRun(runData: TestRunData): Promise<string>
     updateTestRun(runId: string, updates: Partial<TestRunData>): Promise<void>
     getTestRun(runId: string): Promise<TestRunData | null>
+    deleteTestRun(runId: string): Promise<void>
 }

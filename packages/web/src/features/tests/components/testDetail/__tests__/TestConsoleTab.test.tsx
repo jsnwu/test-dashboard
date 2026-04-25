@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from 'vitest'
 import {render, screen} from '@testing-library/react'
 import {TestConsoleOutput} from '../TestConsoleTab'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 describe('TestConsoleTab', () => {
     it('renders empty state when no entries', () => {

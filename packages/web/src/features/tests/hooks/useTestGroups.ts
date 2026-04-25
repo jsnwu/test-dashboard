@@ -1,5 +1,5 @@
 import {useMemo} from 'react'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 export interface TestGroupData {
     filePath: string

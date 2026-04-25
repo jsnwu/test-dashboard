@@ -1,5 +1,6 @@
 import path from 'path'
 import * as dotenv from 'dotenv'
+import {parseDashboardTargetEnv, type DashboardTargetEnv} from 'test-dashboard-core'
 dotenv.config()
 
 export interface EnvironmentConfig {
@@ -10,6 +11,11 @@ export interface EnvironmentConfig {
     playwright: {
         projectDir: string
         reporterPath: string
+        /**
+         * When set, passed to spawned Playwright as `DASHBOARD_TARGET_ENV` so the reporter can set
+         * `metadata.targetEnv` on runs/results (same idea as `DASHBOARD_PROJECT`). Does not change which tests run.
+         */
+        targetEnv?: DashboardTargetEnv
     }
     storage: {
         outputDir: string
@@ -42,6 +48,9 @@ export const config: EnvironmentConfig = {
         },
         get reporterPath() {
             return 'playwright-dashboard-reporter'
+        },
+        get targetEnv() {
+            return parseDashboardTargetEnv(process.env.DASHBOARD_TARGET_ENV)
         },
     },
     storage: {

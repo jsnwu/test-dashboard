@@ -36,6 +36,7 @@ vi.mock('../../config/environment.config', () => ({
         playwright: {
             projectDir: '/test/project',
             reporterPath: 'playwright-dashboard-reporter',
+            targetEnv: undefined,
         },
         api: {
             baseUrl: 'http://localhost:3000',

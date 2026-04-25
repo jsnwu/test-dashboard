@@ -4,7 +4,7 @@ import {AuthService} from '../services/auth.service'
 import {ResponseHelper} from '../utils/response.helper'
 import {Logger} from '../utils/logger.util'
 import {ServiceRequest} from '../types/api.types'
-import {ProcessStartData, ProcessEndData} from '@yshvydak/core'
+import {ProcessStartData, ProcessEndData} from 'test-dashboard-core'
 import {activeProcessesTracker} from '../services/activeProcesses.service'
 import {getWebSocketManager} from '../websocket/server'
 import path from 'path'
@@ -50,11 +50,12 @@ export class TestController {
     // POST /api/tests/run-all - Run all tests
     runAllTests = async (req: ServiceRequest, res: Response): Promise<void> => {
         try {
-            const {maxWorkers, skipAutoDiscovery, project} = req.body
+            const {maxWorkers, skipAutoDiscovery, project, runName} = req.body
             const result = await this.testService.runAllTests(
                 maxWorkers,
                 skipAutoDiscovery,
-                project
+                project,
+                runName
             )
             ResponseHelper.success(res, result)
         } catch (error) {
@@ -98,12 +99,17 @@ export class TestController {
     // POST /api/tests/run-group - Run tests from a specific file/group
     runTestGroup = async (req: ServiceRequest, res: Response): Promise<Response> => {
         try {
-            const {filePath, maxWorkers, testNames} = req.body
+            const {filePath, maxWorkers, testNames, runName} = req.body
             if (!filePath) {
                 return ResponseHelper.badRequest(res, 'Missing filePath parameter')
             }
 
-            const result = await this.testService.runTestGroup(filePath, maxWorkers, testNames)
+            const result = await this.testService.runTestGroup(
+                filePath,
+                maxWorkers,
+                testNames,
+                runName
+            )
             return ResponseHelper.success(res, result)
         } catch (error) {
             Logger.error('Error running group tests', error)
@@ -119,12 +125,21 @@ export class TestController {
     // GET /api/tests - Get all test results
     getAllTests = async (req: ServiceRequest, res: Response): Promise<void> => {
         try {
-            const {runId, status, limit = 100} = req.query
+            const {runId, status, project, targetEnv, limit = 100} = req.query
+
+            const projectStr =
+                typeof project === 'string' && project.trim() !== '' ? project.trim() : undefined
+            const targetEnvStr =
+                typeof targetEnv === 'string' && targetEnv.trim() !== ''
+                    ? targetEnv.trim()
+                    : undefined
 
             const filters = {
                 runId: runId as string,
                 status: status as string,
-                limit: parseInt(limit as string),
+                project: projectStr,
+                targetEnv: targetEnvStr,
+                limit: parseInt(limit as string, 10),
             }
 
             const tests = await this.testService.getAllTests(filters)
@@ -382,8 +397,8 @@ export class TestController {
     rerunTest = async (req: ServiceRequest, res: Response): Promise<void> => {
         try {
             const {id} = req.params
-            const {maxWorkers, project} = req.body
-            const result = await this.testService.rerunTest(id, maxWorkers, project)
+            const {maxWorkers, project, runName} = req.body
+            const result = await this.testService.rerunTest(id, maxWorkers, project, runName)
 
             ResponseHelper.success(res, result, 'Test rerun started')
         } catch (error) {

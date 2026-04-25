@@ -1,7 +1,7 @@
 import {spawn, ChildProcess} from 'child_process'
 import path from 'path'
 import {v4 as uuidv4} from 'uuid'
-import {normalizeTestPath} from '@yshvydak/core'
+import {normalizeTestPath} from 'test-dashboard-core'
 import {IPlaywrightService, TestRunProcess, DiscoveredTest} from '../types/service.types'
 import {
     PlaywrightListOutput,
@@ -104,7 +104,6 @@ export class PlaywrightService implements IPlaywrightService {
         // Use file path directly - Playwright handles path resolution
         const args = ['playwright', 'test', filePath]
 
-        // Add grep pattern if specific test names are provided
         if (testNames && testNames.length > 0) {
             const grepPattern = this.buildGrepPattern(testNames)
             args.push('--grep', grepPattern)
@@ -336,11 +335,14 @@ export class PlaywrightService implements IPlaywrightService {
      * Spawns a Playwright process with the given arguments and options
      */
     private spawnPlaywrightProcess(args: string[], options: PlaywrightSpawnOptions): ChildProcess {
-        const env = {
+        const env: NodeJS.ProcessEnv = {
             ...process.env,
             DASHBOARD_API_URL: config.api.baseUrl,
             ...options.env,
             NODE_ENV: config.server.environment,
+        }
+        if (config.playwright.targetEnv) {
+            env.DASHBOARD_TARGET_ENV = config.playwright.targetEnv
         }
 
         Logger.info('Spawning Playwright process', {
@@ -361,19 +363,17 @@ export class PlaywrightService implements IPlaywrightService {
      */
     private async executePlaywrightListCommand(): Promise<PlaywrightListOutput> {
         return new Promise((resolve, reject) => {
-            const process = spawn(
-                'npx',
-                [
-                    'playwright',
-                    'test',
-                    '--list',
-                    `--reporter=${PLAYWRIGHT_CONSTANTS.LIST_REPORTER}`,
-                ],
-                {
-                    cwd: config.playwright.projectDir,
-                    stdio: ['ignore', 'pipe', 'pipe'],
-                }
-            )
+            const listArgs = [
+                'playwright',
+                'test',
+                '--list',
+                `--reporter=${PLAYWRIGHT_CONSTANTS.LIST_REPORTER}`,
+            ]
+
+            const process = spawn('npx', listArgs, {
+                cwd: config.playwright.projectDir,
+                stdio: ['ignore', 'pipe', 'pipe'],
+            })
 
             let stdout = ''
             let stderr = ''

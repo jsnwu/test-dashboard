@@ -1,6 +1,5 @@
 import {ModalBackdrop} from '@shared/components/molecules'
 import {SettingsThemeSection} from './SettingsThemeSection'
-import {SettingsTestExecutionSection} from './SettingsTestExecutionSection'
 import {SettingsActionsSection} from './SettingsActionsSection'
 import {SettingsStorageSection} from './SettingsStorageSection'
 import {SettingsDataRetentionSection} from './SettingsDataRetentionSection'
@@ -48,7 +47,6 @@ export function SettingsModal({isOpen, onClose}: SettingsModalProps) {
 
                     <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
                         <SettingsThemeSection />
-                        <SettingsTestExecutionSection />
                         <SettingsActionsSection />
                         <SettingsStorageSection />
                         <SettingsDataRetentionSection />

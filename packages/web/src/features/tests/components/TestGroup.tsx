@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {Card} from '@shared/components'
 import {TestGroupData} from '../hooks/useTestGroups'
 import {TestGroupHeader} from './TestGroupHeader'
@@ -10,17 +10,10 @@ export interface TestGroupProps {
     group: TestGroupData
     selectedTest: TestResult | null
     onTestSelect: (test: TestResult) => void
-    onTestRerun: (testId: string) => void
     filter?: FilterKey
 }
 
-export function TestGroup({
-    group,
-    selectedTest,
-    onTestSelect,
-    onTestRerun,
-    filter,
-}: TestGroupProps) {
+export function TestGroup({group, selectedTest, onTestSelect, filter}: TestGroupProps) {
     const [expanded, setExpanded] = useState(true)
 
     return (
@@ -37,7 +30,6 @@ export function TestGroup({
                     tests={group.tests}
                     selectedTest={selectedTest}
                     onTestSelect={onTestSelect}
-                    onTestRerun={onTestRerun}
                 />
             )}
         </Card>

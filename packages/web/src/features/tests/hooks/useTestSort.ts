@@ -1,5 +1,5 @@
 import {useMemo, useState} from 'react'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 export type SortColumn = 'name' | 'status' | 'date' | 'duration'
 export type SortOrder = 'asc' | 'desc'

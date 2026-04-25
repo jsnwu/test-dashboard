@@ -9,6 +9,7 @@ export function createRunRoutes(container: ServiceContainer): Router {
     router.post('/', runController.createTestRun)
     router.get('/', runController.getAllTestRuns)
     router.put('/:id', runController.updateTestRun)
+    router.delete('/:id', runController.deleteTestRun)
 
     // IMPORTANT: /stats route must come before /:id route to avoid conflicts
     router.get('/stats', runController.getStats)

@@ -607,10 +607,9 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setGroupRunning).toHaveBeenCalledWith(
-                'tests/example.spec.ts',
-                false
-            )
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
+            expect(mockStoreActions.clearProgress).toHaveBeenCalled()
         })
 
         it('should handle run:completed for run-all', async () => {
@@ -632,7 +631,9 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setRunningAllTests).toHaveBeenCalledWith(false)
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
+            expect(mockStoreActions.clearProgress).toHaveBeenCalled()
         })
 
         it('should handle run:completed for rerun', async () => {
@@ -654,7 +655,9 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setTestRunning).toHaveBeenCalledWith('123', false)
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
+            expect(mockStoreActions.clearProgress).toHaveBeenCalled()
         })
 
         it('should handle connection message (no-op)', async () => {
@@ -745,7 +748,6 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setRunningAllTests).toHaveBeenCalledWith(true)
             expect(mockStoreActions.fetchTests).toHaveBeenCalled()
             expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
         })
@@ -773,10 +775,8 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setGroupRunning).toHaveBeenCalledWith(
-                'tests/example.spec.ts',
-                true
-            )
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
         })
 
         it('should restore rerun state from connection status', async () => {
@@ -802,7 +802,8 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setTestRunning).toHaveBeenCalledWith('123', true)
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
         })
 
         it('should clear all states when no processes are running', async () => {
@@ -828,7 +829,7 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setRunningAllTests).toHaveBeenCalledWith(false)
+            expect(mockStoreActions.clearProgress).toHaveBeenCalled()
             expect(mockStoreActions.fetchTests).toHaveBeenCalled()
             expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
         })
@@ -860,15 +861,8 @@ describe('useWebSocket', () => {
                 mockWebSocket.simulateMessage(message)
             })
 
-            expect(mockStoreActions.setGroupRunning).toHaveBeenCalledWith(
-                'tests/test1.spec.ts',
-                true
-            )
-            expect(mockStoreActions.setGroupRunning).toHaveBeenCalledWith(
-                'tests/test2.spec.ts',
-                true
-            )
-            expect(mockStoreActions.setTestRunning).toHaveBeenCalledWith('123', true)
+            expect(mockStoreActions.fetchTests).toHaveBeenCalled()
+            expect(mockStoreActions.fetchRuns).toHaveBeenCalled()
         })
     })
 

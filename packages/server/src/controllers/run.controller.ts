@@ -21,6 +21,7 @@ export class RunController {
 
             const runId = await this.runRepository.createTestRun({
                 id: runData.id,
+                runName: runData.runName ?? null,
                 status: runData.status,
                 totalTests: runData.totalTests,
                 passedTests: runData.passedTests || 0,
@@ -69,8 +70,18 @@ export class RunController {
     // GET /api/runs - Get all test runs
     getAllTestRuns = async (req: Request, res: Response): Promise<Response> => {
         try {
-            const {limit = 50, status: _status} = req.query
-            const runs = await this.runRepository.getAllTestRuns(parseInt(limit as string))
+            const {limit = 50, status: _status, project, targetEnv} = req.query
+            const projectStr =
+                typeof project === 'string' && project.trim() !== '' ? project.trim() : undefined
+            const targetEnvStr =
+                typeof targetEnv === 'string' && targetEnv.trim() !== ''
+                    ? targetEnv.trim()
+                    : undefined
+            const runs = await this.runRepository.getAllTestRuns(
+                parseInt(limit as string),
+                projectStr,
+                targetEnvStr
+            )
 
             return res.json(ResponseHelper.successData(runs, `Found ${runs.length} runs`))
         } catch (error) {
@@ -89,10 +100,14 @@ export class RunController {
     // GET /api/runs/stats - Get dashboard statistics
     getStats = async (req: Request, res: Response): Promise<Response> => {
         try {
-            const stats = await this.runRepository.getStats()
+            const {project} = req.query
+            const stats = await this.runRepository.getStats(project as string | undefined)
 
             // Get recent runs
-            const recentRuns = await this.runRepository.getAllTestRuns(5)
+            const recentRuns = await this.runRepository.getAllTestRuns(
+                5,
+                project as string | undefined
+            )
 
             // Calculate success rate
             const successRate =
@@ -117,6 +132,30 @@ export class RunController {
                         error instanceof Error ? error.message : 'Unknown error'
                     )
                 )
+        }
+    }
+
+    // DELETE /api/runs/:id — removes the run and cascades test_results / attachments
+    deleteTestRun = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const {id} = req.params
+            const existing = await this.runRepository.getTestRun(id)
+            if (!existing) {
+                return ResponseHelper.notFound(res, 'Test run')
+            }
+
+            await this.runRepository.deleteTestRun(id)
+            Logger.success(`Test run deleted: ${id}`)
+
+            return ResponseHelper.success(res, {id}, 'Test run deleted successfully')
+        } catch (error) {
+            Logger.error('Error deleting test run', error)
+            return ResponseHelper.error(
+                res,
+                error instanceof Error ? error.message : 'Unknown error',
+                'Failed to delete test run',
+                500
+            )
         }
     }
 

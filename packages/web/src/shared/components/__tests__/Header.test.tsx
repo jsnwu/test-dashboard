@@ -41,14 +41,15 @@ describe('Header - Filter Preservation', () => {
                 <Header currentView="tests" onViewChange={mockOnViewChange} wsConnected={true} />
             )
 
-            const dashboardButton = screen.getByText('Dashboard')
+            const dashboardButton = screen.getByRole('button', {name: /dashboard/i})
             await user.click(dashboardButton)
 
-            expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+            const navArg = vi.mocked(mockNavigate).mock.calls.at(-1)?.[0]
+            expect(navArg).toContain('/dashboard')
             expect(mockOnViewChange).toHaveBeenCalledWith('dashboard')
         })
 
-        it('should not preserve filter when navigating to dashboard', async () => {
+        it('should navigate to dashboard from tests', async () => {
             const user = userEvent.setup()
 
             renderWithRouter(
@@ -56,11 +57,11 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed']
             )
 
-            const dashboardButton = screen.getByText('Dashboard')
+            const dashboardButton = screen.getByRole('button', {name: /dashboard/i})
             await user.click(dashboardButton)
 
-            expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
-            expect(mockNavigate).not.toHaveBeenCalledWith(expect.stringContaining('filter'))
+            const navArg = vi.mocked(mockNavigate).mock.calls.at(-1)?.[0]
+            expect(navArg).toContain('/dashboard')
         })
     })
 
@@ -76,7 +77,7 @@ describe('Header - Filter Preservation', () => {
                 />
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests')
@@ -95,7 +96,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=failed')
@@ -114,7 +115,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=passed']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=passed')
@@ -132,7 +133,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=skipped']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=skipped')
@@ -150,7 +151,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=pending']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=pending')
@@ -168,7 +169,7 @@ describe('Header - Filter Preservation', () => {
                 ['/']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests')
@@ -186,7 +187,7 @@ describe('Header - Filter Preservation', () => {
                 />
             )
 
-            const dashboardButton = screen.getByText('Dashboard')
+            const dashboardButton = screen.getByRole('button', {name: /dashboard/i})
             expect(dashboardButton).toHaveClass('bg-primary-100')
         })
 
@@ -195,7 +196,7 @@ describe('Header - Filter Preservation', () => {
                 <Header currentView="tests" onViewChange={mockOnViewChange} wsConnected={true} />
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             expect(testsButton).toHaveClass('bg-primary-100')
         })
 
@@ -204,7 +205,7 @@ describe('Header - Filter Preservation', () => {
                 <Header currentView="tests" onViewChange={mockOnViewChange} wsConnected={true} />
             )
 
-            const dashboardButton = screen.getByText('Dashboard')
+            const dashboardButton = screen.getByRole('button', {name: /dashboard/i})
             expect(dashboardButton).not.toHaveClass('bg-primary-100')
         })
 
@@ -217,7 +218,7 @@ describe('Header - Filter Preservation', () => {
                 />
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             expect(testsButton).not.toHaveClass('bg-primary-100')
         })
     })
@@ -303,7 +304,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
             await user.click(testsButton)
 
@@ -323,7 +324,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=failed')
@@ -339,10 +340,11 @@ describe('Header - Filter Preservation', () => {
                 </MemoryRouter>
             )
 
-            const dashboardButton = screen.getByText('Dashboard')
+            const dashboardButton = screen.getByRole('button', {name: /dashboard/i})
             await user.click(dashboardButton)
 
-            expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+            const navArg = vi.mocked(mockNavigate).mock.calls.at(-1)?.[0]
+            expect(navArg).toContain('/dashboard')
         })
     })
 
@@ -359,11 +361,13 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed&testId=test-123']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             // Should preserve filter but navigation will handle testId separately
-            expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=failed')
+            const navArg = vi.mocked(mockNavigate).mock.calls[0]?.[0]
+            expect(navArg).toContain('/tests?')
+            expect(navArg).toContain('filter=failed')
         })
 
         it('should handle navigation from tests back to tests', async () => {
@@ -374,7 +378,7 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=passed']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
             expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=passed')
@@ -392,10 +396,13 @@ describe('Header - Filter Preservation', () => {
                 ['/?filter=failed&other=value%20with%20spaces']
             )
 
-            const testsButton = screen.getByText('Tests')
+            const testsButton = screen.getByRole('button', {name: /tests/i})
             await user.click(testsButton)
 
-            expect(mockNavigate).toHaveBeenCalledWith('/tests?filter=failed')
+            const navArg = vi.mocked(mockNavigate).mock.calls[0]?.[0]
+            expect(navArg).toContain('/tests?')
+            expect(navArg).toContain('filter=failed')
+            expect(navArg).toContain('other=value')
         })
     })
 })

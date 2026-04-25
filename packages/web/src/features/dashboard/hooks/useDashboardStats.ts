@@ -1,4 +1,5 @@
 import {useQuery} from '@tanstack/react-query'
+import {useSearchParams} from 'react-router-dom'
 import {authFetch} from '@features/authentication/utils/authFetch'
 import {config} from '@config/environment.config'
 
@@ -12,8 +13,10 @@ export interface DashboardStats {
     recentRuns: any[]
 }
 
-async function fetchDashboardStats(): Promise<DashboardStats> {
-    const response = await authFetch(`${config.api.baseUrl}/runs/stats`)
+async function fetchDashboardStats(project: string | null): Promise<DashboardStats> {
+    const url = `${config.api.baseUrl}/runs/stats${project ? `?project=${encodeURIComponent(project)}` : ''}`
+
+    const response = await authFetch(url)
     if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats')
     }
@@ -22,9 +25,12 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
 }
 
 export function useDashboardStats() {
+    const [searchParams] = useSearchParams()
+    const project = searchParams.get('project')
+
     return useQuery({
-        queryKey: ['dashboard-stats'],
-        queryFn: fetchDashboardStats,
+        queryKey: ['dashboard-stats', project ?? ''],
+        queryFn: () => fetchDashboardStats(project),
         refetchInterval: 30000,
     })
 }

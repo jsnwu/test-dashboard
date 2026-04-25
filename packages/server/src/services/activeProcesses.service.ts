@@ -1,4 +1,4 @@
-import {ActiveProcessInfo, ProcessStartData, TestProgress} from '@yshvydak/core'
+import {ActiveProcessInfo, ProcessStartData, TestProgress} from 'test-dashboard-core'
 import {Logger} from '../utils/logger.util'
 
 export class ActiveProcessesTracker {

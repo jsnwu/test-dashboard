@@ -16,6 +16,7 @@ import {SettingsService} from './settings.service'
 import {Logger} from '../utils/logger.util'
 import {FileUtil} from '../utils/file.util'
 import {activeProcessesTracker} from './activeProcesses.service'
+import {config} from '../config/environment.config'
 
 export class TestService implements ITestService {
     constructor(
@@ -243,13 +244,19 @@ export class TestService implements ITestService {
     }
 
     async getAvailableProjects(): Promise<string[]> {
-        return this.playwrightService.getAvailableProjects()
+        const [fromPlaywright, fromRuns] = await Promise.all([
+            this.playwrightService.getAvailableProjects(),
+            this.runRepository.getDistinctRunProjectTags(),
+        ])
+        const merged = new Set<string>([...fromPlaywright, ...fromRuns])
+        return Array.from(merged).sort((a, b) => a.localeCompare(b))
     }
 
     async runAllTests(
         maxWorkers?: number,
         skipAutoDiscovery?: boolean,
-        _project?: string
+        _project?: string,
+        runName?: string
     ): Promise<any> {
         // Check if tests are already running
         if (activeProcessesTracker.isRunAllActive()) {
@@ -293,6 +300,7 @@ export class TestService implements ITestService {
         // Create test run record
         await this.runRepository.createTestRun({
             id: result.runId,
+            runName: runName ?? null,
             status: 'running',
             totalTests: 0, // Will be updated when tests complete
             passedTests: 0,
@@ -303,6 +311,7 @@ export class TestService implements ITestService {
                 type: 'run-all',
                 triggeredFrom: 'dashboard',
                 project,
+                ...(config.playwright.targetEnv ? {targetEnv: config.playwright.targetEnv} : {}),
             },
         })
 
@@ -327,7 +336,12 @@ export class TestService implements ITestService {
         return result
     }
 
-    async runTestGroup(filePath: string, maxWorkers?: number, testNames?: string[]): Promise<any> {
+    async runTestGroup(
+        filePath: string,
+        maxWorkers?: number,
+        testNames?: string[],
+        runName?: string
+    ): Promise<any> {
         const project = await this.getExecutionProject()
         const result = await this.playwrightService.runTestGroup(
             filePath,
@@ -346,6 +360,7 @@ export class TestService implements ITestService {
         // Create test run record
         await this.runRepository.createTestRun({
             id: result.runId,
+            runName: runName ?? null,
             status: 'running',
             totalTests: 0,
             passedTests: 0,
@@ -358,6 +373,7 @@ export class TestService implements ITestService {
                 triggeredFrom: 'dashboard',
                 filteredTests: testNames ? testNames.length : undefined,
                 project,
+                ...(config.playwright.targetEnv ? {targetEnv: config.playwright.targetEnv} : {}),
             },
         })
 
@@ -387,7 +403,12 @@ export class TestService implements ITestService {
         return result
     }
 
-    async rerunTest(testId: string, maxWorkers?: number, _project?: string): Promise<any> {
+    async rerunTest(
+        testId: string,
+        maxWorkers?: number,
+        _project?: string,
+        runName?: string
+    ): Promise<any> {
         // Get the test to rerun
         const test = await this.testRepository.getTestResult(testId)
         if (!test) {
@@ -414,6 +435,7 @@ export class TestService implements ITestService {
         // Create a new run for this rerun
         await this.runRepository.createTestRun({
             id: result.runId,
+            runName: runName ?? null,
             status: 'running',
             totalTests: 1,
             passedTests: 0,
@@ -426,6 +448,7 @@ export class TestService implements ITestService {
                 originalTestName: test.name,
                 filePath: test.filePath,
                 project,
+                ...(config.playwright.targetEnv ? {targetEnv: config.playwright.targetEnv} : {}),
             },
         })
 

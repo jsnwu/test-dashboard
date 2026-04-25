@@ -1,5 +1,5 @@
 {
-    "name": "@yshvydak/web",
+    "name": "test-dashboard-web",
     "version": "1.8.0",
     "type": "module",
     "description": "Frontend web application for yshvydak-test-dashboard",
@@ -23,11 +23,10 @@
         "tailwind",
         "dashboard"
     ],
-    "author": "Yurii Shvydak <y.shvydak@gmail.com>",
     "license": "MIT",
     "dependencies": {
         "@tanstack/react-query": "^5.8.4",
-        "@yshvydak/core": "^1.8.0",
+        "test-dashboard-core": "^1.8.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.30.1",

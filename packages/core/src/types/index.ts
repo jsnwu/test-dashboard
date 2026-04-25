@@ -68,6 +68,9 @@ export interface TestRun {
     passedTests: number
     failedTests: number
     skippedTests: number
+    /** Total run wall time in milliseconds (from reporter / DB). */
+    duration?: number
+    runName?: string | null
 }
 
 export interface Attachment {

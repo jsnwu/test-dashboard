@@ -1,10 +1,11 @@
 import {useState, useEffect, useMemo} from 'react'
 import {Routes, Route, useLocation, Navigate} from 'react-router-dom'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {Header} from '@shared/components'
 import {Dashboard} from '@features/dashboard'
 import {SettingsModal} from '@features/dashboard/components/settings'
 import {TestsList} from '@features/tests'
+import {ResultsPage} from '@features/results'
 import {FloatingProgressPanel} from '@features/tests/components/progress/FloatingProgressPanel'
 import {LoginPage, setGlobalLogout} from '@features/authentication'
 import {useTestsStore} from '@features/tests/store/testsStore'
@@ -13,7 +14,7 @@ import {useWebSocket} from './hooks/useWebSocket'
 import {config} from '@config/environment.config'
 import {verifyToken} from '@features/authentication/utils/tokenValidator'
 
-type ViewMode = 'dashboard' | 'tests'
+type ViewMode = 'dashboard' | 'tests' | 'results'
 
 function App() {
     const location = useLocation()
@@ -23,13 +24,12 @@ function App() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     // Determine current view from URL
-    const currentView: ViewMode = location.pathname.includes('/dashboard') ? 'dashboard' : 'tests'
-    const {
-        fetchTests,
-        isLoading: testsLoading,
-        rerunTest,
-        checkAndRestoreActiveStates,
-    } = useTestsStore()
+    const currentView: ViewMode = location.pathname.includes('/dashboard')
+        ? 'dashboard'
+        : location.pathname.includes('/results')
+          ? 'results'
+          : 'tests'
+    const {fetchTests, isLoading: testsLoading, checkAndRestoreActiveStates} = useTestsStore()
 
     // Setup global logout function
     useEffect(() => {
@@ -133,6 +133,8 @@ function App() {
         return () => clearInterval(interval)
     }, [isAuthenticated])
 
+    const searchKey = location.search
+
     // Get JWT token for WebSocket connection with proper memoization
     const webSocketUrl = useMemo(() => {
         // Don't connect to WebSocket if loading or not authenticated
@@ -186,14 +188,10 @@ function App() {
 
             return () => clearInterval(interval)
         }
-    }, [fetchTests, checkAndRestoreActiveStates, isAuthenticated])
+    }, [fetchTests, checkAndRestoreActiveStates, isAuthenticated, searchKey])
 
     const handleTestSelect = (test: TestResult) => {
         setSelectedTest(test)
-    }
-
-    const handleTestRerun = async (testId: string) => {
-        await rerunTest(testId)
     }
 
     if (isLoading) {
@@ -218,7 +216,7 @@ function App() {
 
     // Authenticated user interface
     return (
-        <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex h-screen flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 md:flex-row">
             <Header
                 currentView={currentView}
                 onViewChange={() => {
@@ -238,81 +236,63 @@ function App() {
                 }}
             />
 
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
-            <main className="flex-1 overflow-y-auto container mx-auto px-3 md:px-4 py-4 md:py-8">
-                <Routes>
-                    <Route path="/" element={<Navigate to="/tests" replace />} />
-                    <Route
-                        path="/tests"
-                        element={
-                            <TestsList
-                                onTestSelect={handleTestSelect}
-                                onTestRerun={handleTestRerun}
-                                selectedTest={selectedTest}
-                                loading={testsLoading}
-                            />
-                        }
-                    />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                </Routes>
-            </main>
+                <main className="flex-1 overflow-y-auto container mx-auto px-3 md:px-4 py-4 md:py-8">
+                    <Routes>
+                        <Route path="/" element={<Navigate to="/tests" replace />} />
+                        <Route
+                            path="/tests"
+                            element={
+                                <TestsList
+                                    onTestSelect={handleTestSelect}
+                                    selectedTest={selectedTest}
+                                    loading={testsLoading}
+                                />
+                            }
+                        />
+                        <Route path="/results" element={<ResultsPage />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                    </Routes>
+                </main>
 
-            {/* Floating Progress Panel */}
-            <FloatingProgressPanel />
+                <FloatingProgressPanel />
 
-            {/* Footer */}
-            <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-6 md:mt-12">
-                <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
-                    <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
-                            © 2025{' '}
-                            <a
-                                href="https://github.com/shvydak/yshvydak-test-dashboard"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                                title="View project on GitHub">
-                                YShvydak Test Dashboard
-                            </a>
-                            . Created by{' '}
-                            <a
-                                href="https://github.com/shvydak/yshvydak-test-dashboard"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                                title="View project on GitHub">
-                                Yurii Shvydak
-                            </a>
-                            .
-                        </p>
-                        <div className="flex items-center space-x-4">
-                            <span className="text-xs text-gray-500 dark:text-gray-500 hidden sm:inline">
-                                Welcome,{' '}
-                                {(() => {
-                                    try {
-                                        const authData = localStorage.getItem('_auth')
-                                        if (authData) {
-                                            const parsed = JSON.parse(authData)
-                                            const user = parsed?.user || parsed?.auth?.user
-                                            return user?.email || 'User'
-                                        }
-                                    } catch {}
-                                    return 'User'
-                                })()}
-                            </span>
-                            <a
-                                href={VERSION.releaseUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                title="View release notes on GitHub">
-                                v{VERSION.web}
-                            </a>
+                <footer className="shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-6 md:mt-12">
+                    <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                                © 2025 Test Dashboard.
+                            </p>
+                            <div className="flex items-center space-x-4">
+                                <span className="text-xs text-gray-500 dark:text-gray-500 hidden sm:inline">
+                                    Welcome,{' '}
+                                    {(() => {
+                                        try {
+                                            const authData = localStorage.getItem('_auth')
+                                            if (authData) {
+                                                const parsed = JSON.parse(authData)
+                                                const user = parsed?.user || parsed?.auth?.user
+                                                return user?.email || 'User'
+                                            }
+                                        } catch {}
+                                        return 'User'
+                                    })()}
+                                </span>
+                                <a
+                                    href={VERSION.releaseUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    title="View release notes on GitHub">
+                                    v{VERSION.web}
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </footer>
+                </footer>
+            </div>
         </div>
     )
 }

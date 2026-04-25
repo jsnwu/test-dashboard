@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 import {LinkifiedText} from '@/components/atoms/LinkifiedText'
 import {NoteImageThumbnail} from './NoteImageThumbnail'
 import {NoteImageLightbox} from './NoteImageLightbox'

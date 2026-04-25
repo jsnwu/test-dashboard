@@ -1,6 +1,4 @@
-import {TestResult} from '@yshvydak/core'
-import {ActionButton} from '@shared/components'
-import {useTestsStore} from '../../store/testsStore'
+import {TestResult} from 'test-dashboard-core'
 import {ExecutionItem} from './ExecutionItem'
 
 export interface ExecutionSidebarProps {
@@ -9,9 +7,10 @@ export interface ExecutionSidebarProps {
     onSelectExecution: (executionId: string) => void
     onDeleteExecution: (executionId: string) => void
     testId: string
-    onRerun: (testId: string) => void
     loading?: boolean
     error?: string
+    /** Clears selection to return to the latest run; link only shows when current ≠ latest. */
+    onBackToLatest?: () => void
 }
 
 export function ExecutionSidebar({
@@ -20,47 +19,38 @@ export function ExecutionSidebar({
     onSelectExecution,
     onDeleteExecution,
     testId,
-    onRerun,
     loading,
     error,
+    onBackToLatest,
 }: ExecutionSidebarProps) {
-    const {runningTests, getIsAnyTestRunning, activeProgress} = useTestsStore()
-    const isAnyTestRunning = getIsAnyTestRunning()
-
-    // Check if test is running from either source:
-    // 1. runningTests Set (for single test reruns) - uses execution ID
-    // 2. activeProgress.runningTests (for group/all runs) - uses testId
-    // Note: testId prop is the execution ID, but we need test.testId for matching
-    // Get the actual testId from the current test (first execution or matched by ID)
-    const currentTest = executions.find((e) => e.id === testId) || executions[0]
-    const actualTestId = currentTest?.testId || testId
-    const runningInfo = activeProgress?.runningTests.find((t) => t.testId === actualTestId)
-    const isRunning = runningTests.has(testId) || !!runningInfo
+    const latestExecutionId = executions[0]?.id
+    const showBackToLatest =
+        Boolean(onBackToLatest) &&
+        Boolean(latestExecutionId) &&
+        currentExecutionId !== latestExecutionId
 
     return (
         <div className="w-80 h-full min-h-0 border-l border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-gray-800">
             {/* Sticky Header */}
             <div className="sticky top-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 z-10">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                            Execution History
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <div className="min-w-0">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-white">
+                        Execution History
+                    </h3>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="min-w-0 text-xs text-gray-500 dark:text-gray-400">
                             {executions.length}{' '}
                             {executions.length === 1 ? 'execution' : 'executions'}
                         </p>
+                        {showBackToLatest && (
+                            <button
+                                type="button"
+                                onClick={onBackToLatest}
+                                className="flex-shrink-0 whitespace-nowrap text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                                ← Back to latest
+                            </button>
+                        )}
                     </div>
-                    <ActionButton
-                        size="sm"
-                        variant="primary"
-                        isRunning={isRunning}
-                        runningText="Running..."
-                        icon="▶️"
-                        disabled={isAnyTestRunning}
-                        onClick={() => onRerun(testId)}>
-                        Run
-                    </ActionButton>
                 </div>
             </div>
 

@@ -5,7 +5,7 @@ import {
     parseNoteContent,
     removeImageMarker,
 } from '../noteContent.util'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 
 describe('noteContent.util', () => {
     describe('extractImageIds()', () => {

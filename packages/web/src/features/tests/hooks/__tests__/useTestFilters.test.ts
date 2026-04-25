@@ -1,7 +1,7 @@
 import {renderHook} from '@testing-library/react'
 import {describe, it, expect} from 'vitest'
 import {useTestFilters} from '../useTestFilters'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 const createMockTest = (
     id: string,
@@ -83,54 +83,47 @@ describe('useTestFilters', () => {
         })
     })
 
-    describe('Filter by noted', () => {
-        it('should filter tests with notes when filter is "noted"', () => {
+    describe('Filter by flaky', () => {
+        it('should filter tests whose testId is in flakyTestIds', () => {
+            const flakyTestIds = new Set(['test-1', 'test-4', 'test-6'])
             const {result} = renderHook(() =>
-                useTestFilters({tests: mockTests, filter: 'noted', searchQuery: ''})
+                useTestFilters({tests: mockTests, filter: 'flaky', searchQuery: '', flakyTestIds})
             )
 
             expect(result.current.filteredTests).toHaveLength(3)
-            expect(result.current.filteredTests.every((t) => t.note && t.note.content)).toBe(true)
+            expect(result.current.filteredTests.map((t) => t.testId).sort()).toEqual([
+                'test-1',
+                'test-4',
+                'test-6',
+            ])
         })
 
-        it('should return only tests with non-empty notes', () => {
-            const testsWithEmptyNote: TestResult[] = [
-                createMockTest('1', 'passed', 'Test 1', true),
-                {
-                    ...createMockTest('2', 'failed', 'Test 2', false),
-                    note: {
-                        testId: 'test-2',
-                        content: '',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    },
-                },
-                {
-                    ...createMockTest('3', 'passed', 'Test 3', false),
-                    note: {
-                        testId: 'test-3',
-                        content: '   ',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    },
-                },
-            ]
-
+        it('should combine flaky filter with search query', () => {
+            const flakyTestIds = new Set(['test-1', 'test-2', 'test-6'])
             const {result} = renderHook(() =>
-                useTestFilters({tests: testsWithEmptyNote, filter: 'noted', searchQuery: ''})
-            )
-
-            expect(result.current.filteredTests).toHaveLength(1)
-            expect(result.current.filteredTests[0].id).toBe('1')
-        })
-
-        it('should combine noted filter with search query', () => {
-            const {result} = renderHook(() =>
-                useTestFilters({tests: mockTests, filter: 'noted', searchQuery: 'Test 1'})
+                useTestFilters({
+                    tests: mockTests,
+                    filter: 'flaky',
+                    searchQuery: 'Test 1',
+                    flakyTestIds,
+                })
             )
 
             expect(result.current.filteredTests).toHaveLength(1)
             expect(result.current.filteredTests[0].name).toBe('Test 1')
+        })
+
+        it('should return no tests when flaky set is empty', () => {
+            const {result} = renderHook(() =>
+                useTestFilters({
+                    tests: mockTests,
+                    filter: 'flaky',
+                    searchQuery: '',
+                    flakyTestIds: new Set(),
+                })
+            )
+
+            expect(result.current.filteredTests).toHaveLength(0)
         })
     })
 
@@ -184,51 +177,32 @@ describe('useTestFilters', () => {
                 failed: 2,
                 skipped: 1,
                 pending: 1,
-                noted: 3,
+                flaky: 0,
             })
         })
 
-        it('should count tests with notes', () => {
+        it('should count tests that appear in flakyTestIds', () => {
+            const flakyTestIds = new Set(['test-2', 'test-6'])
             const {result} = renderHook(() =>
-                useTestFilters({tests: mockTests, filter: 'all', searchQuery: ''})
+                useTestFilters({tests: mockTests, filter: 'all', searchQuery: '', flakyTestIds})
             )
 
-            expect(result.current.counts.noted).toBe(3)
+            expect(result.current.counts.flaky).toBe(2)
         })
 
-        it('should not count tests with empty notes', () => {
-            const testsWithEmptyNotes: TestResult[] = [
-                createMockTest('1', 'passed', 'Test 1', true),
-                {
-                    ...createMockTest('2', 'failed', 'Test 2', false),
-                    note: {
-                        testId: 'test-2',
-                        content: '',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    },
-                },
-            ]
-
-            const {result} = renderHook(() =>
-                useTestFilters({tests: testsWithEmptyNotes, filter: 'all', searchQuery: ''})
-            )
-
-            expect(result.current.counts.noted).toBe(1)
-        })
-
-        it('should update counts when tests change', () => {
+        it('should update flaky count when tests change', () => {
+            const flakyTestIds = new Set(['test-7'])
             const {result, rerender} = renderHook(
-                ({tests}) => useTestFilters({tests, filter: 'all', searchQuery: ''}),
+                ({tests}) => useTestFilters({tests, filter: 'all', searchQuery: '', flakyTestIds}),
                 {initialProps: {tests: mockTests}}
             )
 
-            expect(result.current.counts.noted).toBe(3)
+            expect(result.current.counts.flaky).toBe(0)
 
-            const newTests = [...mockTests, createMockTest('7', 'passed', 'Test 7', true)]
+            const newTests = [...mockTests, createMockTest('7', 'passed', 'Test 7', false)]
             rerender({tests: newTests})
 
-            expect(result.current.counts.noted).toBe(4)
+            expect(result.current.counts.flaky).toBe(1)
         })
     })
 
@@ -240,21 +214,26 @@ describe('useTestFilters', () => {
 
             expect(result.current.filteredTests).toHaveLength(0)
             expect(result.current.counts.all).toBe(0)
-            expect(result.current.counts.noted).toBe(0)
+            expect(result.current.counts.flaky).toBe(0)
         })
 
-        it('should handle tests without notes field', () => {
-            const testsWithoutNotes: TestResult[] = [
+        it('should handle flaky filter when no tests match flaky ids', () => {
+            const testsWithoutFlaky: TestResult[] = [
                 createMockTest('1', 'passed', 'Test 1', false),
                 createMockTest('2', 'failed', 'Test 2', false),
             ]
 
             const {result} = renderHook(() =>
-                useTestFilters({tests: testsWithoutNotes, filter: 'noted', searchQuery: ''})
+                useTestFilters({
+                    tests: testsWithoutFlaky,
+                    filter: 'flaky',
+                    searchQuery: '',
+                    flakyTestIds: new Set(['test-other']),
+                })
             )
 
             expect(result.current.filteredTests).toHaveLength(0)
-            expect(result.current.counts.noted).toBe(0)
+            expect(result.current.counts.flaky).toBe(0)
         })
 
         it('should handle empty search query', () => {
@@ -263,6 +242,40 @@ describe('useTestFilters', () => {
             )
 
             expect(result.current.filteredTests).toHaveLength(6)
+        })
+    })
+
+    describe('Comma-separated search terms (name + @tags)', () => {
+        const tagTests: TestResult[] = [
+            createMockTest('1', 'passed', 'Login @staging flow', false),
+            createMockTest('2', 'passed', 'Login @prod flow', false),
+            createMockTest('3', 'passed', 'Other test', false),
+        ]
+
+        it('matches @tag term', () => {
+            const {result} = renderHook(() =>
+                useTestFilters({
+                    tests: tagTests,
+                    filter: 'all',
+                    searchQuery: '@staging',
+                })
+            )
+
+            expect(result.current.filteredTests).toHaveLength(1)
+            expect(result.current.filteredTests[0].name).toContain('@staging')
+        })
+
+        it('matches multiple terms using AND semantics', () => {
+            const {result} = renderHook(() =>
+                useTestFilters({
+                    tests: tagTests,
+                    filter: 'all',
+                    searchQuery: 'login, @prod',
+                })
+            )
+
+            expect(result.current.filteredTests).toHaveLength(1)
+            expect(result.current.filteredTests[0].name).toContain('@prod')
         })
     })
 })

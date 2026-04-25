@@ -1,0 +1,74 @@
+{
+    "name": "@test-dashboard/playwright-dashboard-reporter",
+    "version": "1.1.0-fork",
+    "private": true,
+    "description": "Fork: Playwright reporter for test-dashboard with runName + project tagging (see README).",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shvydak/yshvydak-test-dashboard.git",
+        "directory": "playwright-dashboard-reporter"
+    },
+    "homepage": "https://github.com/shvydak/yshvydak-test-dashboard#readme",
+    "bugs": {
+        "url": "https://github.com/shvydak/yshvydak-test-dashboard/issues"
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "test": "npx vitest run",
+        "test:watch": "npx vitest",
+        "test:coverage": "npx vitest run --coverage",
+        "type-check": "tsc --noEmit",
+        "prepublishOnly": "npm run build && npm run type-check"
+    },
+    "keywords": [
+        "playwright",
+        "playwright-reporter",
+        "test-reporter",
+        "testing",
+        "dashboard",
+        "test-automation",
+        "qa",
+        "test-results",
+        "real-time-dashboard",
+        "test-monitoring",
+        "progress-tracking",
+        "live-progress",
+        "test-progress",
+        "playwright-dashboard"
+    ],
+    "author": "YShvydak",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=10.0.0"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.3",
+        "uuid": "^9.0.1"
+    },
+    "peerDependencies": {
+        "@playwright/test": "^1.40.0"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.55.0",
+        "@types/node": "^22.5.4",
+        "@types/uuid": "^10.0.0",
+        "tsup": "^8.3.5",
+        "typescript": "^5.9.3",
+        "vitest": "^3.2.4"
+    },
+    "files": [
+        "dist"
+    ]
+}

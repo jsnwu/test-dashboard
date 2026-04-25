@@ -1,5 +1,5 @@
 import {authGet, authPost, authDelete} from '@features/authentication/utils/authFetch'
-import {TestNote} from '@yshvydak/core'
+import {TestNote} from 'test-dashboard-core'
 import {config} from '@config/environment.config'
 
 export const noteService = {

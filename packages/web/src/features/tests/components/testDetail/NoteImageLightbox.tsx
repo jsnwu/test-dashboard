@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 import {createProtectedFileURL} from '@features/authentication/utils/authFetch'
 import {config} from '@config/environment.config'
 

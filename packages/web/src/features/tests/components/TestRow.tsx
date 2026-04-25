@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react'
-import {TestResult} from '@yshvydak/core'
-import {StatusBadge, ActionButton, LoadingSpinner, Badge} from '@shared/components'
-import {formatDuration, formatLastRun} from '../utils'
+import {TestResult} from 'test-dashboard-core'
+import {StatusBadge, LoadingSpinner, Badge} from '@shared/components'
+import {formatDuration, formatLastRun, parseTestNameTags} from '../utils'
 import {useTestsStore} from '../store/testsStore'
 import {LinkifiedText} from '@/components/atoms/LinkifiedText'
 import {truncateText} from '@/utils/linkify.util'
@@ -9,18 +9,16 @@ import {useNoteImages} from '../hooks/useNoteImages'
 import {parseNoteContent} from '@/utils/noteContent.util'
 import {createProtectedFileURL} from '@features/authentication/utils/authFetch'
 import {config} from '@config/environment.config'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 
 export interface TestRowProps {
     test: TestResult
     selected: boolean
     onSelect: (test: TestResult) => void
-    onRerun: (testId: string) => void
 }
 
-export function TestRow({test, selected, onSelect, onRerun}: TestRowProps) {
-    const {runningTests, getIsAnyTestRunning, activeProgress} = useTestsStore()
-    const isAnyTestRunning = getIsAnyTestRunning()
+export function TestRow({test, selected, onSelect}: TestRowProps) {
+    const {activeProgress} = useTestsStore()
 
     // Load note images for this test
     const {images: noteImages} = useNoteImages(
@@ -31,10 +29,9 @@ export function TestRow({test, selected, onSelect, onRerun}: TestRowProps) {
     // Find if this test is currently running in the active progress
     const runningInfo = activeProgress?.runningTests.find((t) => t.testId === test.testId)
 
-    // Check if test is running from either source:
-    // 1. runningTests Set (for single test reruns)
-    // 2. activeProgress.runningTests (for group/all runs)
-    const isRunning = runningTests.has(test.id) || !!runningInfo
+    const isRunning = !!runningInfo
+
+    const {displayName, tags} = parseTestNameTags(test.name || '')
 
     // Parse note content to extract images
     const noteParts = test.note?.content ? parseNoteContent(test.note.content, noteImages) : []
@@ -49,7 +46,7 @@ export function TestRow({test, selected, onSelect, onRerun}: TestRowProps) {
                       : ''
             }`}
             onClick={() => onSelect(test)}>
-            <td className="py-3 px-3 md:px-6 w-24 md:w-32">
+            <td className="w-24 shrink-0 py-3 px-2 md:px-4 align-top">
                 {isRunning ? (
                     <Badge variant="info" size="md">
                         <LoadingSpinner size="sm" className="mr-1" />
@@ -60,21 +57,21 @@ export function TestRow({test, selected, onSelect, onRerun}: TestRowProps) {
                     <StatusBadge status={test.status as any} />
                 )}
             </td>
-            <td className="py-3 px-3 md:px-6">
-                <div className="font-medium text-gray-900 dark:text-white text-sm md:text-base">
-                    {test.name}
+            <td className="min-w-0 py-3 px-3 md:px-6 align-top">
+                <div className="font-medium text-gray-900 dark:text-white text-sm md:text-base break-words">
+                    {displayName ? displayName : tags.length > 0 ? '—' : test.name || ''}
                 </div>
                 {/* On mobile, show duration inline under name */}
                 <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {formatDuration(test.duration)}
                 </div>
                 {!runningInfo && test.errorMessage && (
-                    <div className="text-xs text-red-600 dark:text-red-400 mt-1 truncate max-w-[200px] md:max-w-xs">
+                    <div className="text-xs text-red-600 dark:text-red-400 mt-1 line-clamp-2 break-words">
                         {test.errorMessage}
                     </div>
                 )}
                 {!runningInfo && test.note?.content && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 max-w-[200px] md:max-w-xs flex items-center gap-1 flex-wrap">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 max-w-full flex items-center gap-1 flex-wrap">
                         <span>💬</span>
                         {noteParts.map((part, index) => {
                             if (part.type === 'image' && part.image) {
@@ -100,26 +97,24 @@ export function TestRow({test, selected, onSelect, onRerun}: TestRowProps) {
                     </div>
                 )}
             </td>
-            <td className="py-3 px-6 text-sm text-gray-600 dark:text-gray-400 w-24 hidden sm:table-cell">
+            <td className="w-36 shrink-0 py-3 px-2 md:px-3 align-top">
+                {tags.length > 0 ? (
+                    <div className="flex flex-wrap content-start gap-1">
+                        {tags.map((tag) => (
+                            <Badge key={tag} variant="neutral" size="sm" className="font-mono">
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+                )}
+            </td>
+            <td className="w-20 shrink-0 py-3 px-2 md:px-4 align-top text-sm tabular-nums text-gray-600 dark:text-gray-400 hidden sm:table-cell">
                 {formatDuration(test.duration)}
             </td>
-            <td className="py-3 px-6 text-sm text-gray-600 dark:text-gray-400 w-48 hidden lg:table-cell">
+            <td className="w-36 shrink-0 py-3 px-2 md:px-4 align-top text-xs leading-snug text-gray-600 dark:text-gray-400 hidden lg:table-cell">
                 {formatLastRun(test)}
-            </td>
-            <td className="py-3 px-3 md:px-6 w-20 md:w-40 hidden sm:table-cell">
-                <ActionButton
-                    size="sm"
-                    variant="primary"
-                    isRunning={isRunning}
-                    runningText="Running..."
-                    icon="▶️"
-                    disabled={isAnyTestRunning}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        onRerun(test.id)
-                    }}>
-                    Run
-                </ActionButton>
             </td>
         </tr>
     )

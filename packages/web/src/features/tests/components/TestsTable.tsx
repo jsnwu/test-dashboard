@@ -1,11 +1,10 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {TestRow} from './TestRow'
 
 export interface TestsTableProps {
     tests: TestResult[]
     selectedTest: TestResult | null
     onTestSelect: (test: TestResult) => void
-    onTestRerun: (testId: string) => void
     showFilePath?: boolean
 }
 
@@ -13,33 +12,33 @@ export function TestsTable({
     tests,
     selectedTest,
     onTestSelect,
-    onTestRerun,
     showFilePath = false,
 }: TestsTableProps) {
     return (
         <div className="overflow-x-clip sm:overflow-x-auto">
-            <table className="w-full">
+            {/* table-fixed + fixed non-name columns so Tags line up across file-group cards */}
+            <table className="w-full table-fixed">
                 <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                        <th className="text-left py-3 px-3 md:px-6 text-xs font-medium text-gray-600 dark:text-gray-400 w-24 md:w-32">
+                        <th className="w-24 shrink-0 text-left py-3 px-2 md:px-4 text-xs font-medium text-gray-600 dark:text-gray-400">
                             Status
                         </th>
-                        <th className="text-left py-3 px-3 md:px-6 text-xs font-medium text-gray-600 dark:text-gray-400">
+                        <th className="min-w-0 text-left py-3 px-3 md:px-6 text-xs font-medium text-gray-600 dark:text-gray-400">
                             Test Name
                         </th>
+                        <th className="w-36 shrink-0 text-left py-3 px-2 md:px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Tags
+                        </th>
                         {showFilePath && (
-                            <th className="text-left py-3 px-6 text-xs font-medium text-gray-600 dark:text-gray-400 hidden lg:table-cell">
+                            <th className="hidden w-36 shrink-0 text-left py-3 px-2 md:px-4 text-xs font-medium text-gray-600 dark:text-gray-400 lg:table-cell">
                                 File Path
                             </th>
                         )}
-                        <th className="text-left py-3 px-6 text-xs font-medium text-gray-600 dark:text-gray-400 w-24 hidden sm:table-cell">
+                        <th className="w-20 shrink-0 text-left py-3 px-2 md:px-4 text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:table-cell">
                             Duration
                         </th>
-                        <th className="text-left py-3 px-6 text-xs font-medium text-gray-600 dark:text-gray-400 w-48 hidden lg:table-cell">
+                        <th className="w-36 shrink-0 text-left py-3 px-2 md:px-4 text-xs font-medium text-gray-600 dark:text-gray-400 hidden lg:table-cell">
                             Last Run
-                        </th>
-                        <th className="text-left py-3 px-3 md:px-6 text-xs font-medium text-gray-600 dark:text-gray-400 w-20 md:w-40 hidden sm:table-cell">
-                            Actions
                         </th>
                     </tr>
                 </thead>
@@ -50,7 +49,6 @@ export function TestsTable({
                             test={test}
                             selected={selectedTest?.id === test.id}
                             onSelect={onTestSelect}
-                            onRerun={onTestRerun}
                         />
                     ))}
                 </tbody>

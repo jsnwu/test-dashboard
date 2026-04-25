@@ -1,5 +1,5 @@
 import {useQuery, useQueryClient} from '@tanstack/react-query'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 import {noteImageService} from '@/services/noteImage.service'
 
 export interface UseNoteImagesReturn {

@@ -1,5 +1,5 @@
 import {authGet, authDelete} from '@features/authentication/utils/authFetch'
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 import {config} from '@config/environment.config'
 
 export const noteImageService = {

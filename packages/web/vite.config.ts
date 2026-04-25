@@ -18,7 +18,7 @@ export default defineConfig({
             '@features': path.resolve(__dirname, './src/features'),
             '@shared': path.resolve(__dirname, './src/shared'),
             '@config': path.resolve(__dirname, './src/config'),
-            '@yshvydak/core': path.resolve(__dirname, '../core/src'),
+            'test-dashboard-core': path.resolve(__dirname, '../core/src'),
         },
     },
     server: {

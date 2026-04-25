@@ -1,6 +1,4 @@
-import {ActionButton} from '@shared/components'
 import {TestGroupData} from '../hooks/useTestGroups'
-import {useTestsStore} from '../store/testsStore'
 import {FilterKey} from '../constants'
 
 export interface TestGroupHeaderProps {
@@ -11,12 +9,7 @@ export interface TestGroupHeaderProps {
 }
 
 export function TestGroupHeader({group, expanded, onToggle, filter}: TestGroupHeaderProps) {
-    const {runningGroups, getIsAnyTestRunning, runTestsGroup} = useTestsStore()
-    const isRunning = runningGroups.has(group.filePath)
-    const isAnyTestRunning = getIsAnyTestRunning()
-
-    // When in "failed" filter, extract only failed test names
-    const testNames = filter === 'failed' ? group.tests.map((t) => t.name) : undefined
+    void filter
 
     return (
         <div
@@ -55,22 +48,6 @@ export function TestGroupHeader({group, expanded, onToggle, filter}: TestGroupHe
                             </span>
                         )}
                     </div>
-                    <ActionButton
-                        size="sm"
-                        variant="primary"
-                        isRunning={isRunning}
-                        runningText="Running..."
-                        icon="▶️"
-                        disabled={isAnyTestRunning}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            if (!isAnyTestRunning) {
-                                runTestsGroup(group.filePath, testNames)
-                            }
-                        }}>
-                        <span className="hidden sm:inline">Run Tests Group</span>
-                        <span className="sm:hidden">Run</span>
-                    </ActionButton>
                 </div>
             </div>
         </div>

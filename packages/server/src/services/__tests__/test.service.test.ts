@@ -79,6 +79,7 @@ describe('TestService', () => {
             createTestRun: vi.fn(),
             updateTestRun: vi.fn(),
             getTestRun: vi.fn(),
+            getDistinctRunProjectTags: vi.fn().mockResolvedValue([]),
         }
 
         mockPlaywrightService = {
@@ -592,27 +593,36 @@ describe('TestService', () => {
     })
 
     describe('getAvailableProjects', () => {
-        it('should delegate to playwrightService', async () => {
-            // Arrange
-            const mockProjects = ['All_Tests', 'Sanity']
-            mockPlaywrightService.getAvailableProjects.mockResolvedValue(mockProjects)
+        it('should merge Playwright projects with distinct run metadata.project tags', async () => {
+            mockPlaywrightService.getAvailableProjects.mockResolvedValue(['chromium', 'firefox'])
+            mockRunRepository.getDistinctRunProjectTags.mockResolvedValue([
+                'slice-dice',
+                'chromium',
+            ])
 
-            // Act
             const result = await testService.getAvailableProjects()
 
-            // Assert
-            expect(result).toEqual(mockProjects)
+            expect(result).toEqual(['chromium', 'firefox', 'slice-dice'])
             expect(mockPlaywrightService.getAvailableProjects).toHaveBeenCalledTimes(1)
+            expect(mockRunRepository.getDistinctRunProjectTags).toHaveBeenCalledTimes(1)
+        })
+
+        it('should return only Playwright projects when no run tags exist', async () => {
+            const mockProjects = ['All_Tests', 'Sanity']
+            mockPlaywrightService.getAvailableProjects.mockResolvedValue(mockProjects)
+            mockRunRepository.getDistinctRunProjectTags.mockResolvedValue([])
+
+            const result = await testService.getAvailableProjects()
+
+            expect(result).toEqual(mockProjects)
         })
 
         it('should return empty array when no projects available', async () => {
-            // Arrange
             mockPlaywrightService.getAvailableProjects.mockResolvedValue([])
+            mockRunRepository.getDistinctRunProjectTags.mockResolvedValue([])
 
-            // Act
             const result = await testService.getAvailableProjects()
 
-            // Assert
             expect(result).toEqual([])
         })
     })

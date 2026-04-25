@@ -1,7 +1,7 @@
 import {defineConfig} from 'vitest/config'
 
 /**
- * Vitest Root Configuration for yshvydak-test-dashboard Monorepo
+ * Vitest Root Configuration for test-dashboard monorepo
  *
  * Migration from deprecated vitest.workspace.ts (Vitest 3.x)
  * Uses test.projects to enable running tests across all packages

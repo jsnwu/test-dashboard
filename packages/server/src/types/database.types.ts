@@ -1,6 +1,7 @@
 // Database entities (keep compatible with existing schema)
 export interface TestRunData {
     id: string
+    runName?: string | null
     status: 'running' | 'completed' | 'failed'
     totalTests: number
     passedTests: number
@@ -8,6 +9,8 @@ export interface TestRunData {
     skippedTests: number
     duration: number
     metadata?: any
+    createdAt?: string
+    updatedAt?: string
 }
 
 export interface TestResultData {

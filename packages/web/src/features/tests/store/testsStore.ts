@@ -1,19 +1,12 @@
 import {create} from 'zustand'
 import {devtools} from 'zustand/middleware'
-import {TestResult, TestRun, TestProgress} from '@yshvydak/core'
-import {authGet, authPost, authDelete} from '@features/authentication/utils/authFetch'
-import {getMaxWorkersFromStorage} from '@/hooks/usePlaywrightWorkers'
-import {getAutoDiscoverFromStorage} from '@/hooks/useAutoDiscoverSetting'
+import {TestResult, TestRun, TestProgress} from 'test-dashboard-core'
+import {authGet, authDelete} from '@features/authentication/utils/authFetch'
 
 interface TestsState {
     tests: TestResult[]
     runs: TestRun[]
     isLoading: boolean
-    isDiscovering: boolean
-    isRunningAllTests: boolean
-    currentRunAllId: string | null
-    runningTests: Set<string>
-    runningGroups: Set<string>
     error: string | null
     lastUpdated: Date | null
     selectedExecutionId: string | null
@@ -25,16 +18,10 @@ interface TestsState {
     // Actions
     fetchTests: () => Promise<void>
     fetchRuns: () => Promise<void>
-    rerunTest: (testId: string) => Promise<void>
+    deleteRun: (runId: string) => Promise<void>
     deleteTest: (testId: string) => Promise<void>
     deleteExecution: (testId: string, executionId: string) => Promise<void>
-    discoverTests: () => Promise<void>
-    runAllTests: () => Promise<void>
-    runTestsGroup: (filePath: string, testNames?: string[]) => Promise<void>
     clearError: () => void
-    setTestRunning: (testId: string, isRunning: boolean) => void
-    setGroupRunning: (filePath: string, isRunning: boolean) => void
-    setRunningAllTests: (isRunning: boolean) => void
     checkAndRestoreActiveStates: () => Promise<void>
     selectExecution: (executionId: string | null) => void
     updateProgress: (progress: TestProgress) => void
@@ -45,17 +32,32 @@ import {config} from '@config/environment.config'
 
 const API_BASE_URL = config.api.baseUrl
 
+function getSelectedProjectFromUrl(): string | undefined {
+    try {
+        const params = new URLSearchParams(window.location.search)
+        const project = params.get('project')
+        return project ? project : undefined
+    } catch {
+        return undefined
+    }
+}
+
+function getSelectedTargetEnvFromUrl(): string | undefined {
+    try {
+        const params = new URLSearchParams(window.location.search)
+        const env = params.get('env')
+        return env ? env : undefined
+    } catch {
+        return undefined
+    }
+}
+
 export const useTestsStore = create<TestsState>()(
     devtools(
         (set, get) => ({
             tests: [],
             runs: [],
             isLoading: false,
-            isDiscovering: false,
-            isRunningAllTests: false,
-            currentRunAllId: null,
-            runningTests: new Set(),
-            runningGroups: new Set(),
             error: null,
             lastUpdated: null,
             selectedExecutionId: null,
@@ -64,23 +66,14 @@ export const useTestsStore = create<TestsState>()(
             // Computed function
             getIsAnyTestRunning: () => {
                 const state = get()
-                return (
-                    state.isDiscovering ||
-                    state.isRunningAllTests ||
-                    state.runningTests.size > 0 ||
-                    state.runningGroups.size > 0
-                )
+                return !!state.activeProgress?.runningTests?.length
             },
 
             fetchTests: async () => {
                 try {
                     const currentState = get()
                     // Только устанавливаем isLoading если никакие другие операции не выполняются
-                    const shouldSetLoading =
-                        !currentState.isDiscovering &&
-                        !currentState.isRunningAllTests &&
-                        currentState.runningTests.size === 0 &&
-                        currentState.runningGroups.size === 0
+                    const shouldSetLoading = !currentState.activeProgress?.runningTests?.length
 
                     if (shouldSetLoading) {
                         set({isLoading: true, error: null})
@@ -88,7 +81,12 @@ export const useTestsStore = create<TestsState>()(
                         set({error: null})
                     }
 
-                    const response = await authGet(`${API_BASE_URL}/tests?limit=200`)
+                    const project = getSelectedProjectFromUrl()
+                    const targetEnv = getSelectedTargetEnvFromUrl()
+                    const q = new URLSearchParams({limit: '200'})
+                    if (project) q.set('project', project)
+                    if (targetEnv) q.set('targetEnv', targetEnv)
+                    const response = await authGet(`${API_BASE_URL}/tests?${q.toString()}`)
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`)
                     }
@@ -110,20 +108,24 @@ export const useTestsStore = create<TestsState>()(
                     set({
                         error: error instanceof Error ? error.message : 'Failed to fetch tests',
                         // Только сбрасываем isLoading если мы его устанавливали
-                        isLoading:
-                            !currentState.isDiscovering &&
-                            !currentState.isRunningAllTests &&
-                            currentState.runningTests.size === 0 &&
-                            currentState.runningGroups.size === 0
-                                ? false
-                                : currentState.isLoading,
+                        isLoading: !currentState.activeProgress?.runningTests?.length
+                            ? false
+                            : currentState.isLoading,
                     })
                 }
             },
 
             fetchRuns: async () => {
                 try {
-                    const response = await authGet(`${API_BASE_URL}/runs`)
+                    const project = getSelectedProjectFromUrl()
+                    const targetEnv = getSelectedTargetEnvFromUrl()
+                    const rq = new URLSearchParams()
+                    if (project) rq.set('project', project)
+                    if (targetEnv) rq.set('targetEnv', targetEnv)
+                    const runsQs = rq.toString()
+                    const response = await authGet(
+                        `${API_BASE_URL}/runs${runsQs ? `?${runsQs}` : ''}`
+                    )
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`)
                     }
@@ -143,16 +145,13 @@ export const useTestsStore = create<TestsState>()(
                 }
             },
 
-            rerunTest: async (testId: string) => {
+            deleteRun: async (runId: string) => {
                 try {
-                    // Set this specific test as running
-                    get().setTestRunning(testId, true)
                     set({error: null})
 
-                    const maxWorkers = getMaxWorkersFromStorage()
-                    const response = await authPost(`${API_BASE_URL}/tests/${testId}/rerun`, {
-                        maxWorkers,
-                    })
+                    const response = await authDelete(
+                        `${API_BASE_URL}/runs/${encodeURIComponent(runId)}`
+                    )
 
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`)
@@ -161,20 +160,17 @@ export const useTestsStore = create<TestsState>()(
                     const data = await response.json()
 
                     if (data.success) {
-                        // Обновляем тесты через некоторое время, чтобы получить обновленный статус
-                        setTimeout(() => {
-                            get().fetchTests()
-                        }, 2000)
+                        await get().fetchRuns()
+                        await get().fetchTests()
                     } else {
-                        throw new Error(data.message || 'Failed to rerun test')
+                        throw new Error(data.message || 'Failed to delete run')
                     }
                 } catch (error) {
-                    console.error('Error rerunning test:', error)
+                    console.error('Error deleting run:', error)
                     set({
-                        error: error instanceof Error ? error.message : 'Failed to rerun test',
+                        error: error instanceof Error ? error.message : 'Failed to delete run',
                     })
-                    // Clear the running state for this test on error
-                    get().setTestRunning(testId, false)
+                    throw error
                 }
             },
 
@@ -235,176 +231,7 @@ export const useTestsStore = create<TestsState>()(
                 }
             },
 
-            discoverTests: async () => {
-                try {
-                    set({isDiscovering: true, error: null})
-
-                    const response = await authPost(`${API_BASE_URL}/tests/discovery`)
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`)
-                    }
-
-                    const data = await response.json()
-
-                    if (data.success) {
-                        // Обновляем список тестов после discovery
-                        await get().fetchTests()
-                    } else {
-                        throw new Error(data.message || 'Failed to discover tests')
-                    }
-                } catch (error) {
-                    console.error('Error discovering tests:', error)
-                    set({
-                        error: error instanceof Error ? error.message : 'Failed to discover tests',
-                    })
-                } finally {
-                    set({isDiscovering: false})
-                }
-            },
-
-            runAllTests: async () => {
-                try {
-                    const autoDiscover = getAutoDiscoverFromStorage()
-
-                    // Auto-discover tests before running if setting is enabled
-                    if (autoDiscover) {
-                        set({isDiscovering: true, error: null})
-                        try {
-                            const discoveryResponse = await authPost(
-                                `${API_BASE_URL}/tests/discovery`
-                            )
-                            if (!discoveryResponse.ok) {
-                                throw new Error(`HTTP error! status: ${discoveryResponse.status}`)
-                            }
-                            const discoveryData = await discoveryResponse.json()
-                            if (!discoveryData.success) {
-                                throw new Error(discoveryData.message || 'Failed to discover tests')
-                            }
-                            // Refresh test list with newly discovered tests (Q3)
-                            await get().fetchTests()
-                        } catch (error) {
-                            // Q1: abort run if discovery failed
-                            set({
-                                isDiscovering: false,
-                                error:
-                                    error instanceof Error
-                                        ? error.message
-                                        : 'Failed to discover tests',
-                            })
-                            return
-                        }
-                        set({isDiscovering: false})
-                    }
-
-                    set({isRunningAllTests: true, error: null})
-
-                    const maxWorkers = getMaxWorkersFromStorage()
-                    const response = await authPost(`${API_BASE_URL}/tests/run-all`, {
-                        maxWorkers,
-                        skipAutoDiscovery: true, // discovery already handled above (or disabled)
-                    })
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`)
-                    }
-
-                    const data = await response.json()
-
-                    if (data.success) {
-                        const runId = data.data.runId
-
-                        // Сохраняем ID run для отслеживания (используется WebSocket для завершения)
-                        set({currentRunAllId: runId})
-
-                        // Обновляем runs список
-                        setTimeout(() => {
-                            get().fetchRuns()
-                            get().fetchTests()
-                        }, 1000)
-                    } else {
-                        throw new Error(data.message || 'Failed to run all tests')
-                    }
-                } catch (error) {
-                    console.error('Error running all tests:', error)
-                    set({
-                        error: error instanceof Error ? error.message : 'Failed to run all tests',
-                        isRunningAllTests: false,
-                        currentRunAllId: null,
-                    })
-                }
-            },
-
-            runTestsGroup: async (filePath: string, testNames?: string[]) => {
-                try {
-                    // Set this specific group as running
-                    get().setGroupRunning(filePath, true)
-                    set({error: null})
-
-                    const maxWorkers = getMaxWorkersFromStorage()
-                    const response = await authPost(`${API_BASE_URL}/tests/run-group`, {
-                        filePath,
-                        maxWorkers,
-                        testNames,
-                    })
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`)
-                    }
-
-                    const data = await response.json()
-
-                    if (data.success) {
-                        // Обновляем runs и tests списки
-                        setTimeout(() => {
-                            get().fetchRuns()
-                            get().fetchTests()
-                        }, 1000)
-                    } else {
-                        throw new Error(data.message || 'Failed to run tests group')
-                    }
-                } catch (error) {
-                    console.error('Error running tests group:', error)
-                    set({
-                        error: error instanceof Error ? error.message : 'Failed to run tests group',
-                    })
-                    // Clear the running state for this group on error
-                    get().setGroupRunning(filePath, false)
-                }
-            },
-
             clearError: () => set({error: null}),
-
-            setTestRunning: (testId: string, isRunning: boolean) => {
-                set((state) => {
-                    const newRunningTests = new Set(state.runningTests)
-                    if (isRunning) {
-                        newRunningTests.add(testId)
-                    } else {
-                        newRunningTests.delete(testId)
-                    }
-                    return {runningTests: newRunningTests}
-                })
-            },
-
-            setGroupRunning: (filePath: string, isRunning: boolean) => {
-                set((state) => {
-                    const newRunningGroups = new Set(state.runningGroups)
-                    if (isRunning) {
-                        newRunningGroups.add(filePath)
-                    } else {
-                        newRunningGroups.delete(filePath)
-                    }
-                    return {runningGroups: newRunningGroups}
-                })
-            },
-
-            setRunningAllTests: (isRunning: boolean) => {
-                set({isRunningAllTests: isRunning})
-                if (!isRunning) {
-                    set({currentRunAllId: null})
-                }
-            },
 
             checkAndRestoreActiveStates: async () => {
                 // This function is now simplified since state restoration

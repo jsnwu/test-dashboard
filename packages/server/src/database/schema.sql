@@ -4,6 +4,7 @@
 -- Test runs (top-level execution sessions)
 CREATE TABLE IF NOT EXISTS test_runs (
     id TEXT PRIMARY KEY,
+    run_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     status TEXT CHECK(status IN ('running', 'completed', 'failed')) DEFAULT 'running',

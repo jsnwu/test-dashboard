@@ -1,4 +1,4 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {TestsGroupedView} from './TestsGroupedView'
 import {FilterKey} from '../constants'
 
@@ -6,7 +6,6 @@ export interface TestsContentProps {
     tests: TestResult[]
     selectedTest: TestResult | null
     onTestSelect: (test: TestResult) => void
-    onTestRerun: (testId: string) => void
     searchQuery?: string
     filter?: FilterKey
 }
@@ -15,7 +14,6 @@ export function TestsContent({
     tests,
     selectedTest,
     onTestSelect,
-    onTestRerun,
     searchQuery,
     filter,
 }: TestsContentProps) {
@@ -40,7 +38,6 @@ export function TestsContent({
             tests={tests}
             selectedTest={selectedTest}
             onTestSelect={onTestSelect}
-            onTestRerun={onTestRerun}
             filter={filter}
         />
     )

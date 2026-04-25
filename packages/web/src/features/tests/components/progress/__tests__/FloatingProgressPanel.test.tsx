@@ -19,7 +19,7 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 import {render, screen, fireEvent} from '@testing-library/react'
 import {FloatingProgressPanel} from '../FloatingProgressPanel'
 import {useTestsStore} from '@features/tests/store/testsStore'
-import type {TestProgress} from '@yshvydak/core'
+import type {TestProgress} from 'test-dashboard-core'
 
 // Mock the store
 vi.mock('@features/tests/store/testsStore', () => ({

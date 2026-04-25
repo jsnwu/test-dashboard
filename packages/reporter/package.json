@@ -1,6 +1,6 @@
 {
     "name": "playwright-dashboard-reporter",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "Real-time Playwright test dashboard with rerun capabilities and comprehensive test reporting",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
@@ -22,8 +22,8 @@
         "url": "https://github.com/shvydak/yshvydak-test-dashboard/issues"
     },
     "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "build": "tsup src/index.ts --format cjs,esm --dts --clean --external test-dashboard-core",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external test-dashboard-core",
         "test": "npx vitest run",
         "test:watch": "npx vitest",
         "test:coverage": "npx vitest run --coverage",
@@ -46,7 +46,6 @@
         "test-progress",
         "playwright-dashboard"
     ],
-    "author": "YShvydak",
     "license": "MIT",
     "engines": {
         "node": ">=18.0.0",
@@ -56,6 +55,7 @@
         "access": "public"
     },
     "dependencies": {
+        "test-dashboard-core": "^1.8.2",
         "dotenv": "^17.2.3",
         "uuid": "^9.0.1"
     },

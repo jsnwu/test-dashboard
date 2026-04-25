@@ -1,14 +1,16 @@
-import {useState, useMemo, useCallback, useEffect, useRef} from 'react'
+import {useState, useEffect, useLayoutEffect, useRef} from 'react'
 import {useQueryClient} from '@tanstack/react-query'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {TabKey} from '../../types/attachment.types'
 import {useTestAttachments} from '../../hooks/useTestAttachments'
 import {useTestExecutionHistory} from '../../hooks/useTestExecutionHistory'
 import {useTestsStore} from '../../store/testsStore'
-import {useWebSocket} from '../../../../hooks/useWebSocket'
-import {getWebSocketUrl} from '@features/authentication/utils'
 import {noteService} from '../../../../services/note.service'
 import {ModalBackdrop, ConfirmationDialog} from '@shared/components/molecules'
+import {
+    acquireModalBodyScrollLock,
+    releaseModalBodyScrollLock,
+} from '@shared/utils/modalBodyScrollLock'
 import {TestDetailHeader} from './TestDetailHeader'
 import {TestDetailTabs} from './TestDetailTabs'
 import {TestOverviewTab} from './TestOverviewTab'
@@ -19,9 +21,11 @@ export interface TestDetailModalProps {
     test: TestResult | null
     isOpen: boolean
     onClose: () => void
+    /** Navigate back to Results (shown when URL includes `from=results`). */
+    onBackToResults?: () => void
 }
 
-export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
+export function TestDetailModal({test, isOpen, onClose, onBackToResults}: TestDetailModalProps) {
     const [activeTab, setActiveTab] = useState<TabKey>('overview')
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
     const [showDeleteExecutionConfirmation, setShowDeleteExecutionConfirmation] = useState(false)
@@ -36,31 +40,15 @@ export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
     const queryClient = useQueryClient()
     const selectedExecutionId = useTestsStore((state) => state.selectedExecutionId)
     const selectExecution = useTestsStore((state) => state.selectExecution)
-    const rerunTest = useTestsStore((state) => state.rerunTest)
     const deleteTest = useTestsStore((state) => state.deleteTest)
     const deleteExecution = useTestsStore((state) => state.deleteExecution)
-    const runningTests = useTestsStore((state) => state.runningTests)
-    const getIsAnyTestRunning = useTestsStore((state) => state.getIsAnyTestRunning)
-    const activeProgress = useTestsStore((state) => state.activeProgress)
 
-    // Lock body scroll when modal is open
-    useEffect(() => {
-        if (isOpen) {
-            const scrollY = window.scrollY
-            document.body.style.position = 'fixed'
-            document.body.style.top = `-${scrollY}px`
-            document.body.style.left = '0'
-            document.body.style.right = '0'
-            document.body.style.overflow = 'hidden'
-
-            return () => {
-                document.body.style.position = ''
-                document.body.style.top = ''
-                document.body.style.left = ''
-                document.body.style.right = ''
-                document.body.style.overflow = ''
-                window.scrollTo(0, scrollY)
-            }
+    // Lock body scroll whenever the overlay is shown (including loading shell), matching RunDetailModal.
+    useLayoutEffect(() => {
+        if (!isOpen) return
+        acquireModalBodyScrollLock()
+        return () => {
+            releaseModalBodyScrollLock()
         }
     }, [isOpen])
 
@@ -116,36 +104,15 @@ export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
           ? executions[0]
           : test
 
+    const latestExecutionId = executions[0]?.id
+    const viewingLatestExecution =
+        !latestExecutionId ||
+        Boolean(currentExecution?.id && currentExecution.id === latestExecutionId)
+
     const {attachments, loading, error, setError} = useTestAttachments(
         currentExecution?.id || null,
         isOpen
     )
-
-    const webSocketUrl = useMemo(() => {
-        if (!isOpen) return null
-        return getWebSocketUrl()
-    }, [isOpen])
-
-    const handleRunCompleted = useCallback(
-        (data: any) => {
-            if (
-                data.isRerun &&
-                (data.testId === test?.testId || data.originalTestId === currentExecution?.id)
-            ) {
-                refetchHistory()
-                selectExecution(null)
-            }
-        },
-        [test?.testId, currentExecution?.id, refetchHistory, selectExecution]
-    )
-
-    useWebSocket(webSocketUrl, {
-        onRunCompleted: handleRunCompleted,
-    })
-
-    const handleRerun = async (testId: string) => {
-        await rerunTest(testId)
-    }
 
     const handleClose = () => {
         selectExecution(null)
@@ -247,14 +214,52 @@ export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
         refetchHistory()
     }
 
-    if (!isOpen || !test) return null
+    if (!isOpen) return null
+
+    if (!test) {
+        return (
+            <div className="fixed inset-0 z-50 overflow-hidden">
+                <div className="flex min-h-screen items-center justify-center p-0 md:p-4">
+                    <ModalBackdrop onClick={handleClose} blur="none" />
+                    <div className="relative bg-white dark:bg-gray-800 md:rounded-lg shadow-xl max-w-7xl w-full h-screen md:h-[90vh] flex flex-col overflow-hidden">
+                        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 p-4 md:p-5 flex items-center justify-between">
+                            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                                Loading test…
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1"
+                                aria-label="Close">
+                                <svg
+                                    className="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                            Resolving test…
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     const swipeOpacity = swipeOffset > 0 ? Math.max(0.3, 1 - swipeOffset / 200) : 1
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="flex min-h-screen items-center justify-center p-0 md:p-4">
-                <ModalBackdrop onClick={handleClose} blur="sm" />
+                <ModalBackdrop onClick={handleClose} blur="none" />
 
                 <div
                     className="relative bg-white dark:bg-gray-800 md:rounded-lg shadow-xl max-w-7xl w-full h-screen md:h-[90vh] flex flex-col overflow-hidden"
@@ -287,16 +292,11 @@ export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
                             testName={test.name}
                             testStatus={currentExecution?.status || test.status}
                             executionDate={currentExecution?.createdAt}
-                            isLatest={!selectedExecutionId}
+                            isLatest={viewingLatestExecution}
                             onClose={handleClose}
                             onBackToLatest={() => selectExecution(null)}
                             onDelete={handleDeleteClick}
-                            onRerun={() => handleRerun(currentExecution?.id || test.id)}
-                            isRunning={
-                                runningTests.has(currentExecution?.id || test.id) ||
-                                !!activeProgress?.runningTests.find((t) => t.testId === test.testId)
-                            }
-                            isAnyTestRunning={getIsAnyTestRunning()}
+                            onBackToResults={onBackToResults}
                         />
                     </div>
 
@@ -332,9 +332,9 @@ export function TestDetailModal({test, isOpen, onClose}: TestDetailModalProps) {
                                 onSelectExecution={handleSelectExecution}
                                 onDeleteExecution={handleDeleteExecutionClick}
                                 testId={currentExecution?.id || test.id}
-                                onRerun={handleRerun}
                                 loading={historyLoading}
                                 error={historyError || undefined}
+                                onBackToLatest={() => selectExecution(null)}
                             />
                         </div>
                     </div>

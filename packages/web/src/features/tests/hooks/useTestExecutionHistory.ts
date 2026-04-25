@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {authGet} from '@features/authentication/utils/authFetch'
 import {config} from '@config/environment.config'
 

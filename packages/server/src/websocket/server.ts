@@ -5,7 +5,7 @@ import {v4 as uuidv4} from 'uuid'
 import {activeProcessesTracker} from '../services/activeProcesses.service'
 import {AuthService} from '../services/auth.service'
 import {config} from '../config/environment.config'
-import {TestProgress} from '@yshvydak/core'
+import {TestProgress} from 'test-dashboard-core'
 import {Logger} from '../utils/logger.util'
 
 export interface WebSocketMessage {

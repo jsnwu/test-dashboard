@@ -1,4 +1,4 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {useNavigate} from 'react-router-dom'
 import StatsCard from './StatsCard'
 import {DashboardStats as DashboardStatsType} from '../hooks/useDashboardStats'
@@ -42,7 +42,7 @@ export function DashboardStats({stats, tests, loading}: DashboardStatsProps) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <StatsCard
-                title={`Total Tests ( not include "skipped" )`}
+                title="Total Tests"
                 value={displayStats.totalTests - displayStats.skippedTests}
                 icon="📊"
                 loading={loading}

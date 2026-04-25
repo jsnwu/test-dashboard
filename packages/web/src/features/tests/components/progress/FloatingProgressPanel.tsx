@@ -3,7 +3,7 @@ import {useTestsStore} from '@features/tests/store/testsStore'
 import {ProgressBar} from '@/shared/components/atoms/ProgressBar'
 import {LoadingSpinner} from '@/shared/components/atoms/LoadingSpinner'
 import {TestDetailModal} from '../testDetail/TestDetailModal'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 
 const formatTime = (ms: number): string => {
     const seconds = Math.floor(ms / 1000)
@@ -120,7 +120,7 @@ export const FloatingProgressPanel = () => {
     }
 
     return (
-        <div className="fixed bottom-3 left-3 right-3 md:left-auto md:right-4 md:bottom-4 z-50 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 transition-all">
+        <div className="fixed bottom-3 left-3 right-3 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 transition-all md:bottom-4 md:left-[calc(14rem+0.75rem)] md:right-4 md:w-auto md:max-w-96">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">

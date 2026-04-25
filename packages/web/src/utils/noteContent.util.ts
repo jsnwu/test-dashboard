@@ -1,4 +1,4 @@
-import {NoteImage} from '@yshvydak/core'
+import {NoteImage} from 'test-dashboard-core'
 
 export interface ParsedNotePart {
     type: 'text' | 'image'

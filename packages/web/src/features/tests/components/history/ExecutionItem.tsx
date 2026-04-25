@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {StatusBadge} from '@shared/components'
 import {formatLastRun, formatDuration} from '../../utils/formatters'
 

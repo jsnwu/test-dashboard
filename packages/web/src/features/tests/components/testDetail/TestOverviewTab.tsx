@@ -1,4 +1,4 @@
-import {TestResult} from '@yshvydak/core'
+import {TestResult} from 'test-dashboard-core'
 import {LoadingSpinner} from '@shared/components'
 import {AttachmentWithBlobURL} from '../../types/attachment.types'
 import {AttachmentItem} from './AttachmentItem'

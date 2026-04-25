@@ -90,7 +90,7 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 
 ```bash
 # Clone the dashboard
-git clone <your-fork-or-repo-url>
+git clone https://github.com/jsnwu/test-dashboard.git
 cd test-dashboard
 
 # Install dependencies

@@ -226,7 +226,7 @@ curl http://localhost:3001/api/tests/diagnostics
     - Check Dashboard is running and `PLAYWRIGHT_PROJECT_DIR` points to correct test project
     - Dashboard passes `DASHBOARD_API_URL` to reporter automatically via environment
 3. **Connection issues**: Ensure dashboard is running on correct port
-5. **Test count inconsistency**: If test discovery shows different counts than after test execution:
+4. **Test count inconsistency**: If test discovery shows different counts than after test execution:
     - Discovery finds fewer tests: Check if all test files are being scanned properly
     - Fewer tests after execution: Usually resolved by API limit parameters (dashboard uses `limit=200`)
     - See [Test Display Architecture](docs/TEST_DISPLAY.md) for technical details

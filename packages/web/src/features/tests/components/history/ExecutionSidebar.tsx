@@ -18,7 +18,7 @@ export function ExecutionSidebar({
     currentExecutionId,
     onSelectExecution,
     onDeleteExecution,
-    testId,
+    testId: _testId,
     loading,
     error,
     onBackToLatest,

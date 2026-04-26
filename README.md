@@ -4,17 +4,17 @@ Forked and customized from `shvydak/yshvydak-test-dashboard` for local workflows
 
 Key changes in this fork:
 
-- Focus the product on **dashboard-only** workflows (viewing, triage), remove rerun tests or test discovery
 - Add **Results tabs** to browse all runs, with drill-down into a single run’s tests
 - Improve filtering (search by **test name** and `@tags`)
 - Add **project** configuration + filtering
 - Add **target environment** configuration + filtering
+- Enchance test artifacts with video and trace viewer
 
 >
 
-> 🎭 **Modern, full-stack dashboard for Playwright tests with one-click rerun capabilities**
+> 🎭 **Modern, full-stack dashboard for Playwright tests **
 
-A comprehensive testing dashboard that transforms your Playwright test experience with real-time monitoring, instant reruns, and beautiful reporting. Built for teams who value efficiency and visibility in their testing workflows.
+A comprehensive testing dashboard that transforms your Playwright test experience with real-time monitoring, and beautiful reporting. Built for teams who value efficiency and visibility in their testing workflows.
 
 > **📦 Reporter is included in this repo**: `playwright-dashboard-reporter` lives in `packages/reporter` and is used by the dashboard and by Playwright runs from this project.
 
@@ -23,30 +23,24 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 ## ✨ Why This Dashboard?
 
 ### The Problem
-
-- **No Quick Reruns**: Failed tests require manual command-line reruns
 - **Team Visibility**: Hard to share test status with stakeholders
+- **Traceability**: Hard to trace down the exact failure of a test
 - **Historical Context**: No easy way to track test trends over time
 
 ### The Solution
 
-- **🚀 One-Click Reruns**: Instantly rerun any failed test directly from the web UI
+- **🚀 Full Test Detail**: Test log, screenshot, video, and trace view
 - **📊 Real-Time Monitoring**: Watch tests execute live with WebSocket updates
 - **📈 Historical Tracking**: See test trends, failure patterns, and performance over time
 - **👥 Team Friendly**: Beautiful web interface anyone can understand
-- **🎯 Zero Configuration**: Works with existing Playwright projects out-of-the-box
+- **🎯 Minimal Configuration**: Works with existing Playwright projects out-of-the-box
 
 ## 🎪 Key Features
 
-### 🔄 **Smart Test Reruns**
-
-- Rerun individual tests or entire test files
-- Maintain test context and configuration
-- Real-time feedback on rerun progress
-
 ### 📊 **Comprehensive Dashboard**
-
+- Configurable project and environment
 - Live test execution monitoring
+- Real-time feedback on test progress
 - Interactive test results with filtering
 - Complete execution history with independent attachments per run
 - Attachment viewing (screenshots, videos, traces) with persistent storage
@@ -56,7 +50,6 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 ### ⚡ **Simple Reporter Integration**
 
 - **Repo-local reporter**: `playwright-dashboard-reporter` is developed in-tree (`packages/reporter`)
-- **Dashboard-run tests**: The dashboard starts Playwright with the reporter automatically
 - **CLI-run tests**: You can add the reporter in your `playwright.config.ts` (example below)
 - **Clean separation**: Your existing reporters can continue to work unchanged
 
@@ -126,7 +119,6 @@ export default defineConfig({
     reporter: [
         ['html'],
         ['list'],
-        // Local reporter from this monorepo:
         ['playwright-dashboard-reporter', {apiBaseUrl: process.env.DASHBOARD_API_BASE_URL}],
     ],
 })

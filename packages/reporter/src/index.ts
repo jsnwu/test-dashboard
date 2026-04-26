@@ -31,6 +31,25 @@ export interface DashboardReporterOptions {
     silent?: boolean
     /** API request timeout in ms (reserved). */
     timeout?: number
+    /**
+     * Upload video content bytes to the dashboard server via
+     * `POST /api/tests/:id/attachments/upload`.
+     *
+     * Default: `false`. Env: `DASHBOARD_UPLOAD_VIDEO=true`
+     */
+    uploadVideo?: boolean
+    /**
+     * Upload trace content bytes to the dashboard server via
+     * `POST /api/tests/:id/attachments/upload`.
+     *
+     * Default: `false`. Env: `DASHBOARD_UPLOAD_TRACE=true`
+     */
+    uploadTrace?: boolean
+    /**
+     * Backwards-compatible switch (if set, enables both `uploadVideo` and `uploadTrace`).
+     * Env: `DASHBOARD_UPLOAD_ATTACHMENTS=true`
+     */
+    uploadAttachments?: boolean
 }
 
 function normalizeTestPath(filePath: string): string {
@@ -126,6 +145,8 @@ class YShvydakReporter implements Reporter {
     private readonly runName?: string
     private readonly project?: string
     private readonly targetEnv?: DashboardTargetEnv
+    private readonly uploadVideoEnabled: boolean
+    private readonly uploadTraceEnabled: boolean
     private readonly consoleEntriesByResult = new WeakMap<TestResult, ConsoleEntry[]>()
     private readonly consoleWasTruncatedByResult = new WeakMap<TestResult, boolean>()
     private static readonly MAX_CONSOLE_LINES = 500
@@ -151,6 +172,16 @@ class YShvydakReporter implements Reporter {
         const te = options.targetEnv ?? process.env.DASHBOARD_TARGET_ENV
         this.targetEnv = parseDashboardTargetEnv(te)
 
+        const legacyUploadAll =
+            options.uploadAttachments ?? process.env.DASHBOARD_UPLOAD_ATTACHMENTS === 'true'
+
+        this.uploadVideoEnabled =
+            options.uploadVideo ??
+            (legacyUploadAll ? true : process.env.DASHBOARD_UPLOAD_VIDEO === 'true')
+        this.uploadTraceEnabled =
+            options.uploadTrace ??
+            (legacyUploadAll ? true : process.env.DASHBOARD_UPLOAD_TRACE === 'true')
+
         console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId})`)
         console.log(`🌐 API Base URL: ${this.apiBaseUrl}`)
         if (this.runName) {
@@ -161,6 +192,13 @@ class YShvydakReporter implements Reporter {
         }
         if (this.targetEnv) {
             console.log(`🎯 Target env tag: ${this.targetEnv}`)
+        }
+        if (this.uploadVideoEnabled || this.uploadTraceEnabled) {
+            console.log(
+                `📎 Upload content: video=${this.uploadVideoEnabled ? 'on' : 'off'} trace=${
+                    this.uploadTraceEnabled ? 'on' : 'off'
+                }`
+            )
         }
 
         if (!this.apiBaseUrl || this.apiBaseUrl === 'undefined') {
@@ -215,7 +253,7 @@ class YShvydakReporter implements Reporter {
         console.log(`▶️  Starting: ${test.title}`)
     }
 
-    onTestEnd(test: TestCase, result: TestResult) {
+    async onTestEnd(test: TestCase, result: TestResult) {
         const testId = this.generateStableTestId(test)
         // Normalize path for consistent file path display
         const filePath = normalizeTestPath(path.relative(process.cwd(), test.location.file))
@@ -239,6 +277,8 @@ class YShvydakReporter implements Reporter {
 
         const consoleEntries = this.consoleEntriesByResult.get(result) || []
         const consoleTruncated = this.consoleWasTruncatedByResult.get(result) || false
+
+        const uploadables = this.getUploadableAttachments(result.attachments)
 
         const testResult: YShvydakTestResult = {
             id: uuidv4(),
@@ -266,7 +306,10 @@ class YShvydakReporter implements Reporter {
         this.results.push(testResult)
 
         // Send result to dashboard API
-        this.sendTestResult(testResult)
+        await this.sendTestResult(testResult)
+        if (uploadables.length > 0) {
+            await this.uploadAttachmentsForTestResult(testResult.id, uploadables)
+        }
 
         console.log(
             `${this.getStatusIcon(testResult.status)} ${testResult.name} (${testResult.duration}ms)`
@@ -403,12 +446,107 @@ class YShvydakReporter implements Reporter {
         }
     }
 
+    private getUploadableAttachments(
+        attachments: TestResult['attachments']
+    ): Array<{type: 'trace' | 'video'; name: string; path: string; contentType?: string}> {
+        if (!this.uploadVideoEnabled && !this.uploadTraceEnabled) return []
+
+        const out: Array<{
+            type: 'trace' | 'video'
+            name: string
+            path: string
+            contentType?: string
+        }> = []
+
+        for (const a of attachments || []) {
+            const p = a?.path
+            const n = a?.name
+            if (!p || !n) continue
+
+            const contentType = a?.contentType
+            const lowerName = n.toLowerCase()
+
+            const isTrace =
+                contentType === 'application/zip' ||
+                lowerName.endsWith('.zip') ||
+                lowerName.includes('trace')
+            const isVideo =
+                (contentType && contentType.startsWith('video/')) ||
+                lowerName.endsWith('.webm') ||
+                lowerName.endsWith('.mp4')
+
+            if (isTrace && this.uploadTraceEnabled) {
+                out.push({type: 'trace', name: n, path: p, contentType})
+            } else if (isVideo && this.uploadVideoEnabled) {
+                out.push({type: 'video', name: n, path: p, contentType})
+            }
+        }
+
+        return out
+    }
+
+    private async uploadAttachmentsForTestResult(
+        testResultId: string,
+        attachments: Array<{
+            type: 'trace' | 'video'
+            name: string
+            path: string
+            contentType?: string
+        }>
+    ): Promise<void> {
+        for (const a of attachments) {
+            try {
+                if (!fs.existsSync(a.path)) {
+                    console.warn(`⚠️  Attachment not found on disk: ${a.path}`)
+                    continue
+                }
+
+                const buffer = await fs.promises.readFile(a.path)
+
+                // Keep types loose to avoid TS env/lib mismatches in consumers.
+                const form: any = new (globalThis as any).FormData()
+                form.append('type', a.type)
+
+                const blob: any = new (globalThis as any).Blob([buffer], {
+                    type: a.contentType || 'application/octet-stream',
+                })
+                form.append('file', blob, path.basename(a.path) || a.name)
+
+                const response = await fetch(
+                    `${this.apiBaseUrl}/api/tests/${encodeURIComponent(testResultId)}/attachments/upload`,
+                    {
+                        method: 'POST',
+                        body: form,
+                    }
+                )
+
+                if (!response.ok) {
+                    const txt = await response.text().catch(() => '')
+                    console.warn(
+                        `⚠️  Failed to upload attachment (${a.type}) (${response.status}): ${txt || 'empty body'}`
+                    )
+                }
+            } catch (error) {
+                console.warn(`⚠️  Failed to upload attachment (${a.type}): ${error}`)
+            }
+        }
+    }
+
     private processAttachments(attachments: TestResult['attachments']) {
-        return attachments.map((attachment) => ({
-            name: attachment.name,
-            path: attachment.path || '',
-            contentType: attachment.contentType,
-        }))
+        return (attachments || []).map((attachment) => {
+            const name = attachment?.name || ''
+            const contentType = attachment?.contentType || ''
+            const filePath = attachment?.path || ''
+
+            const uploadables = this.getUploadableAttachments([attachment] as any)
+            const shouldStripPath = uploadables.length > 0
+
+            return {
+                name,
+                path: shouldStripPath ? '' : filePath,
+                contentType,
+            }
+        })
     }
 
     private createEnhancedErrorMessage(test: TestCase, error: any): string {

@@ -35,7 +35,10 @@ describe('DatabaseManager', () => {
         })
 
         it('should enable foreign keys constraint', async () => {
-            // Try to insert test result without corresponding run (should fail due to FK)
+            const pragma = await db.query('PRAGMA foreign_keys')
+            expect(pragma.foreign_keys).toBe(1)
+
+            // saveTestResult is allowed to upsert the parent run row (reporters can emit out of order)
             const testResult: TestResultData = {
                 id: randomUUID(),
                 runId: 'non-existent-run-id',
@@ -46,7 +49,7 @@ describe('DatabaseManager', () => {
                 duration: 100,
             }
 
-            await expect(db.saveTestResult(testResult)).rejects.toThrow()
+            await expect(db.saveTestResult(testResult)).resolves.toBe(testResult.id)
         })
 
         it('should enable WAL mode for better concurrency', async () => {

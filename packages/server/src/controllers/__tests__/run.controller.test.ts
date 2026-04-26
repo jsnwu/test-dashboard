@@ -104,7 +104,10 @@ describe('RunController', () => {
             await controller.createTestRun(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.createTestRun).toHaveBeenCalledWith(runData)
+            expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
+                ...runData,
+                runName: null,
+            })
             expect(ResponseHelper.success).toHaveBeenCalledWith(
                 mockRes,
                 {id: 'run-123'},
@@ -197,6 +200,7 @@ describe('RunController', () => {
             // Assert
             expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
                 id: 'run-123',
+                runName: null,
                 status: 'running',
                 totalTests: 10,
                 passedTests: 0,
@@ -383,7 +387,7 @@ describe('RunController', () => {
             await controller.getAllTestRuns(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(50)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(50, undefined, undefined)
             expect(mockRes.json).toHaveBeenCalledWith(
                 expect.objectContaining({
                     success: true,
@@ -403,7 +407,7 @@ describe('RunController', () => {
             await controller.getAllTestRuns(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(10)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(10, undefined, undefined)
         })
 
         it('should handle empty runs list', async () => {
@@ -433,7 +437,7 @@ describe('RunController', () => {
             await controller.getAllTestRuns(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(20)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(20, undefined, undefined)
         })
 
         it('should handle repository errors', async () => {
@@ -499,7 +503,7 @@ describe('RunController', () => {
 
             // Assert
             expect(mockRunRepository.getStats).toHaveBeenCalled()
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(5)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(5, undefined)
             expect(mockRes.json).toHaveBeenCalledWith(
                 expect.objectContaining({
                     success: true,
@@ -773,6 +777,7 @@ describe('RunController', () => {
             // Assert
             expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
                 ...runData,
+                runName: null,
                 skippedTests: 0,
                 duration: 0,
                 metadata: undefined,
@@ -788,7 +793,11 @@ describe('RunController', () => {
             await controller.getAllTestRuns(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(999999)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(
+                999999,
+                undefined,
+                undefined
+            )
         })
 
         it('should handle invalid limit values', async () => {
@@ -800,7 +809,7 @@ describe('RunController', () => {
             await controller.getAllTestRuns(mockReq as Request, mockRes as Response)
 
             // Assert
-            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(NaN)
+            expect(mockRunRepository.getAllTestRuns).toHaveBeenCalledWith(NaN, undefined, undefined)
         })
 
         it('should handle success rate with decimal precision', async () => {

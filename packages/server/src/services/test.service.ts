@@ -17,6 +17,7 @@ import {Logger} from '../utils/logger.util'
 import {FileUtil} from '../utils/file.util'
 import {activeProcessesTracker} from './activeProcesses.service'
 import {config} from '../config/environment.config'
+import {AttachmentType} from '../storage/attachmentManager'
 
 export class TestService implements ITestService {
     constructor(
@@ -229,6 +230,26 @@ export class TestService implements ITestService {
         }
 
         return resultId
+    }
+
+    async uploadAttachmentForTestResult(params: {
+        testResultId: string
+        type: AttachmentType
+        fileName: string
+        buffer: Buffer
+    }): Promise<void> {
+        // Validate test result exists before storing large blobs on disk.
+        const existing = await this.testRepository.getTestResult(params.testResultId)
+        if (!existing) {
+            throw new Error('Test result not found')
+        }
+
+        await this.attachmentService.saveUploadedAttachmentForTestResult({
+            testResultId: params.testResultId,
+            type: params.type,
+            fileName: params.fileName,
+            buffer: params.buffer,
+        })
     }
 
     async getTestStats(): Promise<DatabaseStats> {

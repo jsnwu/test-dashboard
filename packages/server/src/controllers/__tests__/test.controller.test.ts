@@ -210,7 +210,12 @@ describe('TestController', () => {
 
             await controller.runAllTests(mockReq as ServiceRequest, mockRes as Response)
 
-            expect(mockTestService.runAllTests).toHaveBeenCalledWith(4, undefined, undefined)
+            expect(mockTestService.runAllTests).toHaveBeenCalledWith(
+                4,
+                undefined,
+                undefined,
+                undefined
+            )
             expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, runResult)
         })
 
@@ -221,6 +226,7 @@ describe('TestController', () => {
             await controller.runAllTests(mockReq as ServiceRequest, mockRes as Response)
 
             expect(mockTestService.runAllTests).toHaveBeenCalledWith(
+                undefined,
                 undefined,
                 undefined,
                 undefined
@@ -237,7 +243,12 @@ describe('TestController', () => {
             await controller.runAllTests(mockReq as ServiceRequest, mockRes as Response)
 
             // Assert
-            expect(mockTestService.runAllTests).toHaveBeenCalledWith(2, undefined, 'Sanity')
+            expect(mockTestService.runAllTests).toHaveBeenCalledWith(
+                2,
+                undefined,
+                'Sanity',
+                undefined
+            )
             expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, runResult)
         })
 
@@ -250,7 +261,12 @@ describe('TestController', () => {
             await controller.runAllTests(mockReq as ServiceRequest, mockRes as Response)
 
             // Assert
-            expect(mockTestService.runAllTests).toHaveBeenCalledWith(4, undefined, undefined)
+            expect(mockTestService.runAllTests).toHaveBeenCalledWith(
+                4,
+                undefined,
+                undefined,
+                undefined
+            )
         })
 
         it('should handle tests already running error (409)', async () => {
@@ -320,6 +336,7 @@ describe('TestController', () => {
             expect(mockTestService.runTestGroup).toHaveBeenCalledWith(
                 'tests/example.spec.ts',
                 2,
+                undefined,
                 undefined
             )
             expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, runResult)
@@ -719,7 +736,12 @@ describe('TestController', () => {
 
             await controller.rerunTest(mockReq as ServiceRequest, mockRes as Response)
 
-            expect(mockTestService.rerunTest).toHaveBeenCalledWith('result-1', 2, 'All_Tests')
+            expect(mockTestService.rerunTest).toHaveBeenCalledWith(
+                'result-1',
+                2,
+                'All_Tests',
+                undefined
+            )
             expect(ResponseHelper.success).toHaveBeenCalledWith(
                 mockRes,
                 result,
@@ -734,7 +756,12 @@ describe('TestController', () => {
 
             await controller.rerunTest(mockReq as ServiceRequest, mockRes as Response)
 
-            expect(mockTestService.rerunTest).toHaveBeenCalledWith('result-1', undefined, undefined)
+            expect(mockTestService.rerunTest).toHaveBeenCalledWith(
+                'result-1',
+                undefined,
+                undefined,
+                undefined
+            )
         })
 
         it('should return 404 when test not found', async () => {

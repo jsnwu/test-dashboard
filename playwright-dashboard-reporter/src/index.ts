@@ -21,10 +21,25 @@ export interface DashboardReporterOptions {
     runName?: string
     /** Stored on the run as `metadata.project` for dashboard filtering. Env: `DASHBOARD_PROJECT` */
     project?: string
+    /**
+     * Target deployment env stored on runs/results as `metadata.targetEnv` (same role as `project`).
+     * Env: `DASHBOARD_TARGET_ENV`. Does not filter which tests execute.
+     */
+    targetEnv?: string
     /** Suppress reporter console output (reserved). */
     silent?: boolean
     /** API request timeout in ms (reserved). */
     timeout?: number
+}
+
+type DashboardTargetEnv = 'local' | 'staging' | 'prod'
+
+function parseDashboardTargetEnv(value: string | undefined | null): DashboardTargetEnv | undefined {
+    if (value == null) return undefined
+    const v = String(value).trim().toLowerCase()
+    if (!v || v === 'all') return undefined
+    if (v === 'local' || v === 'staging' || v === 'prod') return v
+    return undefined
 }
 
 function normalizeTestPath(filePath: string): string {
@@ -71,6 +86,7 @@ interface YShvydakTestResult {
     }>
     metadata?: {
         project?: string
+        targetEnv?: DashboardTargetEnv
         steps?: TestStep[]
         console?: {
             entries: ConsoleEntry[]
@@ -118,6 +134,7 @@ class YShvydakReporter implements Reporter {
     private apiBaseUrl: string
     private readonly runName?: string
     private readonly project?: string
+    private readonly targetEnv?: DashboardTargetEnv
     private readonly consoleEntriesByResult = new WeakMap<TestResult, ConsoleEntry[]>()
     private readonly consoleWasTruncatedByResult = new WeakMap<TestResult, boolean>()
     private static readonly MAX_CONSOLE_LINES = 500
@@ -140,6 +157,8 @@ class YShvydakReporter implements Reporter {
         this.runName = typeof rn === 'string' && rn.trim() !== '' ? rn.trim() : undefined
         const pj = options.project ?? process.env.DASHBOARD_PROJECT
         this.project = typeof pj === 'string' && pj.trim() !== '' ? pj.trim() : undefined
+        const te = options.targetEnv ?? process.env.DASHBOARD_TARGET_ENV
+        this.targetEnv = parseDashboardTargetEnv(te)
 
         console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId})`)
         console.log(`🌐 API Base URL: ${this.apiBaseUrl}`)
@@ -148,6 +167,9 @@ class YShvydakReporter implements Reporter {
         }
         if (this.project) {
             console.log(`📁 Project tag: ${this.project}`)
+        }
+        if (this.targetEnv) {
+            console.log(`🎯 Target env tag: ${this.targetEnv}`)
         }
 
         if (!this.apiBaseUrl || this.apiBaseUrl === 'undefined') {
@@ -241,6 +263,7 @@ class YShvydakReporter implements Reporter {
             attachments: this.processAttachments(result.attachments),
             metadata: {
                 ...(this.project ? {project: this.project} : {}),
+                ...(this.targetEnv ? {targetEnv: this.targetEnv} : {}),
                 steps: steps.length > 0 ? steps : undefined,
                 console:
                     consoleEntries.length > 0
@@ -533,6 +556,9 @@ class YShvydakReporter implements Reporter {
         }
         if (this.project) {
             metadata.project = this.project
+        }
+        if (this.targetEnv) {
+            metadata.targetEnv = this.targetEnv
         }
 
         try {

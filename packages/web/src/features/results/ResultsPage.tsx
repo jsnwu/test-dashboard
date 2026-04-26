@@ -84,10 +84,11 @@ export function ResultsPage() {
     const [runDatePreset, setRunDatePreset] = useState<RunDatePreset>('all')
     const [runNameQuery, setRunNameQuery] = useState('')
     const projectFilter = searchParams.get('project') ?? ''
+    const targetEnvFilter = searchParams.get('env') ?? ''
 
     useEffect(() => {
         void fetchRuns()
-    }, [fetchRuns, projectFilter])
+    }, [fetchRuns, projectFilter, targetEnvFilter])
 
     /** Re-open run detail modal when returning from Tests (see `openRun` query). */
     const openRunParam = searchParams.get('openRun')

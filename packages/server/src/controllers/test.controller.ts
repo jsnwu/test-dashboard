@@ -481,6 +481,44 @@ export class TestController {
         }
     }
 
+    // POST /api/tests/:id/attachments/upload - Upload a trace/video/etc for a test result
+    uploadAttachment = async (req: ServiceRequest, res: Response): Promise<void> => {
+        try {
+            const {id} = req.params
+            const type = String((req.body as any)?.type || '').trim()
+
+            if (!req.file) {
+                ResponseHelper.badRequest(res, 'Missing file upload (field: file)')
+                return
+            }
+            if (!type) {
+                ResponseHelper.badRequest(res, 'Missing required field: type')
+                return
+            }
+            if (!['video', 'screenshot', 'trace', 'log'].includes(type)) {
+                ResponseHelper.badRequest(res, `Invalid attachment type: ${type}`)
+                return
+            }
+
+            await this.testService.uploadAttachmentForTestResult({
+                testResultId: id,
+                type: type as any,
+                fileName: req.file.originalname || 'attachment',
+                buffer: req.file.buffer,
+            })
+
+            ResponseHelper.success(res, {ok: true}, 'Attachment uploaded')
+        } catch (error) {
+            Logger.error('Error uploading attachment', error)
+            ResponseHelper.error(
+                res,
+                error instanceof Error ? error.message : 'Unknown error',
+                'Failed to upload attachment',
+                error instanceof Error && error.message === 'Test result not found' ? 404 : 500
+            )
+        }
+    }
+
     // GET /api/tests/diagnostics - Get integration diagnostics
     getDiagnostics = async (_req: ServiceRequest, res: Response): Promise<Response> => {
         try {
@@ -720,6 +758,9 @@ export class TestController {
             res.setHeader('Pragma', 'no-cache')
             res.setHeader('Expires', '0')
             res.setHeader('X-Content-Type-Options', 'nosniff')
+            // Allow Playwright Trace Viewer (trace.playwright.dev) to fetch the file cross-origin.
+            // The file is still protected by the signed JWT `?token=` query parameter.
+            res.setHeader('Access-Control-Allow-Origin', '*')
 
             // Send file with absolute path
             res.sendFile(path.resolve(traceFile.filePath), (err) => {

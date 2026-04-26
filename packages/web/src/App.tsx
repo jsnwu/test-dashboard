@@ -29,7 +29,12 @@ function App() {
         : location.pathname.includes('/results')
           ? 'results'
           : 'tests'
-    const {fetchTests, isLoading: testsLoading, checkAndRestoreActiveStates} = useTestsStore()
+    const {
+        fetchTests,
+        fetchRuns,
+        isLoading: testsLoading,
+        checkAndRestoreActiveStates,
+    } = useTestsStore()
 
     // Setup global logout function
     useEffect(() => {
@@ -177,6 +182,7 @@ function App() {
             const initializeApp = async () => {
                 await checkAndRestoreActiveStates()
                 fetchTests()
+                fetchRuns()
             }
 
             initializeApp()
@@ -184,11 +190,12 @@ function App() {
             // Periodic update every 30 seconds
             const interval = setInterval(() => {
                 fetchTests()
+                fetchRuns()
             }, 30000)
 
             return () => clearInterval(interval)
         }
-    }, [fetchTests, checkAndRestoreActiveStates, isAuthenticated, searchKey])
+    }, [fetchTests, fetchRuns, checkAndRestoreActiveStates, isAuthenticated, searchKey])
 
     const handleTestSelect = (test: TestResult) => {
         setSelectedTest(test)

@@ -646,6 +646,7 @@ describe('TestService', () => {
             expect(mockPlaywrightService.runAllTests).toHaveBeenCalledWith(4, undefined)
             expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
                 id: 'run-123',
+                runName: null,
                 status: 'running',
                 totalTests: 0,
                 passedTests: 0,
@@ -853,6 +854,7 @@ describe('TestService', () => {
             )
             expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
                 id: 'run-456',
+                runName: null,
                 status: 'running',
                 totalTests: 0,
                 passedTests: 0,
@@ -941,6 +943,7 @@ describe('TestService', () => {
             )
             expect(mockRunRepository.createTestRun).toHaveBeenCalledWith({
                 id: 'rerun-789',
+                runName: null,
                 status: 'running',
                 totalTests: 1,
                 passedTests: 0,

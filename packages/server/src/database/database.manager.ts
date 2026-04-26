@@ -103,15 +103,28 @@ export class DatabaseManager {
                             }
                         }
 
-                        // Enable foreign keys and configure database
-                        this.db.run('PRAGMA foreign_keys = ON')
-                        this.db.run('PRAGMA journal_mode = WAL') // Write-Ahead Logging for better concurrency
-                        this.db.run('PRAGMA synchronous = NORMAL') // Balance between safety and performance
-                        this.db.run('PRAGMA cache_size = 1000') // Increase cache size
-                        this.db.run('PRAGMA temp_store = MEMORY') // Store temp tables in memory
+                        // Enable foreign keys and configure database.
+                        // Important: sqlite3 `run()` is async; use a single `exec()` so these
+                        // pragmas are applied before schema init / any queries in tests.
+                        this.db.exec(
+                            [
+                                'PRAGMA foreign_keys = ON;',
+                                'PRAGMA journal_mode = WAL;', // better concurrency (in-memory stays "memory")
+                                'PRAGMA synchronous = NORMAL;', // balance safety/perf
+                                'PRAGMA cache_size = 1000;',
+                                'PRAGMA temp_store = MEMORY;',
+                            ].join('\n'),
+                            (pragmaErr) => {
+                                if (pragmaErr) {
+                                    Logger.error('Failed to apply DB pragmas:', pragmaErr)
+                                    reject(pragmaErr)
+                                    return
+                                }
 
-                        // Initialize schema and resolve after schema is created
-                        this.initSchema(resolve, reject)
+                                // Initialize schema and resolve after schema is created
+                                this.initSchema(resolve, reject)
+                            }
+                        )
                     }
                 }
             )

@@ -28,3 +28,17 @@ export const upload = multer({
 
 // Middleware for single image upload
 export const uploadSingleImage = upload.single('image')
+
+// -----------------------------------------------------------------------------
+// Generic attachment upload (trace/video/screenshot/log)
+// -----------------------------------------------------------------------------
+
+export const uploadAttachment = multer({
+    storage,
+    // No filter: allow traces/videos/logs/etc. Validation is handled in controller/service.
+    limits: {
+        fileSize: 200 * 1024 * 1024, // 200MB max file size
+    },
+})
+
+export const uploadSingleAttachment = uploadAttachment.single('file')

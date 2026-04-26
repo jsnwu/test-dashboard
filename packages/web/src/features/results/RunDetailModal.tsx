@@ -15,6 +15,7 @@ import {
 import {FilterKey} from '@features/tests/constants'
 import {useTestsStore} from '@features/tests/store/testsStore'
 import {parseTestNameTags} from '@features/tests/utils'
+import {openAttachmentInNewWindow, openTraceViewer} from '@features/tests/utils/attachmentHelpers'
 import {formatRunDateTime, formatRunDurationMs, formatRunTitle} from './runFormatters'
 
 export interface RunDetailModalProps {
@@ -256,6 +257,9 @@ export function RunDetailModal({
                                                 <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-40">
                                                     Tags
                                                 </th>
+                                                <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-44">
+                                                    Artifacts
+                                                </th>
                                                 <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">
                                                     File
                                                 </th>
@@ -265,7 +269,7 @@ export function RunDetailModal({
                                             {runTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={4}
+                                                        colSpan={5}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests in this run.
                                                     </td>
@@ -273,7 +277,7 @@ export function RunDetailModal({
                                             ) : filteredTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={4}
+                                                        colSpan={5}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests match this filter.
                                                     </td>
@@ -288,6 +292,15 @@ export function RunDetailModal({
                                                             : tags.length > 0
                                                               ? '—'
                                                               : t.name || ''
+                                                        const trace = (t.attachments || []).find(
+                                                            (a) => a.type === 'trace'
+                                                        )
+                                                        const video = (t.attachments || []).find(
+                                                            (a) => a.type === 'video'
+                                                        )
+                                                        const screenshot = (
+                                                            t.attachments || []
+                                                        ).find((a) => a.type === 'screenshot')
                                                         return (
                                                             <tr
                                                                 key={t.id}
@@ -329,6 +342,69 @@ export function RunDetailModal({
                                                                                     {tag}
                                                                                 </Badge>
                                                                             ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 dark:text-gray-500">
+                                                                            —
+                                                                        </span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                                    {trace ||
+                                                                    video ||
+                                                                    screenshot ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            {screenshot && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(
+                                                                                        e
+                                                                                    ) => {
+                                                                                        e.stopPropagation()
+                                                                                        openAttachmentInNewWindow(
+                                                                                            screenshot as any,
+                                                                                            () => {}
+                                                                                        )
+                                                                                    }}
+                                                                                    className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                                                    title="View screenshot">
+                                                                                    Screenshot
+                                                                                </button>
+                                                                            )}
+                                                                            {video && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(
+                                                                                        e
+                                                                                    ) => {
+                                                                                        e.stopPropagation()
+                                                                                        openAttachmentInNewWindow(
+                                                                                            video as any,
+                                                                                            () => {}
+                                                                                        )
+                                                                                    }}
+                                                                                    className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                                                                    title="Open video in a new tab">
+                                                                                    Video
+                                                                                </button>
+                                                                            )}
+                                                                            {trace && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(
+                                                                                        e
+                                                                                    ) => {
+                                                                                        e.stopPropagation()
+                                                                                        openTraceViewer(
+                                                                                            trace as any,
+                                                                                            () => {}
+                                                                                        )
+                                                                                    }}
+                                                                                    className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
+                                                                                    title="Open in Playwright Trace Viewer">
+                                                                                    Trace
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     ) : (
                                                                         <span className="text-gray-400 dark:text-gray-500">

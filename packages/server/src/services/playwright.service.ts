@@ -68,6 +68,12 @@ export class PlaywrightService implements IPlaywrightService {
         Logger.testRun('run-all', runId)
 
         const args = ['playwright', 'test']
+        if (config.playwright.traceOnFailure) {
+            args.push('--trace=retain-on-failure')
+        }
+        if (config.playwright.videoOnFailure) {
+            args.push('--video=retain-on-failure')
+        }
         if (project) {
             args.push(`--project=${project}`)
         }
@@ -103,6 +109,12 @@ export class PlaywrightService implements IPlaywrightService {
 
         // Use file path directly - Playwright handles path resolution
         const args = ['playwright', 'test', filePath]
+        if (config.playwright.traceOnFailure) {
+            args.push('--trace=retain-on-failure')
+        }
+        if (config.playwright.videoOnFailure) {
+            args.push('--video=retain-on-failure')
+        }
 
         if (testNames && testNames.length > 0) {
             const grepPattern = this.buildGrepPattern(testNames)
@@ -157,6 +169,12 @@ export class PlaywrightService implements IPlaywrightService {
         const grepPattern = `(?<![a-zA-Z])${escapedTestName}(?![a-zA-Z])`
 
         const args = ['playwright', 'test', testFile, '--grep', grepPattern]
+        if (config.playwright.traceOnFailure) {
+            args.push('--trace=retain-on-failure')
+        }
+        if (config.playwright.videoOnFailure) {
+            args.push('--video=retain-on-failure')
+        }
         if (maxWorkers) {
             args.push(`--workers=${maxWorkers}`)
         }

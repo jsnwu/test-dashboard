@@ -12,6 +12,16 @@ export interface EnvironmentConfig {
         projectDir: string
         reporterPath: string
         /**
+         * When true, spawned Playwright runs will keep traces for failed tests.
+         * Equivalent to `--trace=retain-on-failure`.
+         */
+        traceOnFailure: boolean
+        /**
+         * When true, spawned Playwright runs will keep videos for failed tests.
+         * Equivalent to `--video=retain-on-failure`.
+         */
+        videoOnFailure: boolean
+        /**
          * When set, passed to spawned Playwright as `DASHBOARD_TARGET_ENV` so the reporter can set
          * `metadata.targetEnv` on runs/results (same idea as `DASHBOARD_PROJECT`). Does not change which tests run.
          */
@@ -48,6 +58,12 @@ export const config: EnvironmentConfig = {
         },
         get reporterPath() {
             return 'playwright-dashboard-reporter'
+        },
+        get traceOnFailure() {
+            return process.env.PLAYWRIGHT_TRACE_ON_FAILURE === 'true'
+        },
+        get videoOnFailure() {
+            return process.env.PLAYWRIGHT_VIDEO_ON_FAILURE === 'true'
         },
         get targetEnv() {
             return parseDashboardTargetEnv(process.env.DASHBOARD_TARGET_ENV)

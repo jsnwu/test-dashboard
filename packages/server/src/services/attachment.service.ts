@@ -99,6 +99,34 @@ export class AttachmentService implements IAttachmentService {
         }
     }
 
+    async saveUploadedAttachmentForTestResult(params: {
+        testResultId: string
+        type: AttachmentType
+        fileName: string
+        buffer: Buffer
+    }): Promise<AttachmentData> {
+        const saved = await this.attachmentManager.saveAttachment(
+            params.buffer,
+            params.testResultId,
+            params.type,
+            params.fileName
+        )
+
+        const attachmentData: AttachmentData = {
+            id: saved.id,
+            testResultId: params.testResultId,
+            type: saved.type as any,
+            fileName: saved.fileName,
+            filePath: saved.filePath,
+            fileSize: saved.fileSize,
+            mimeType: saved.mimeType,
+            url: saved.url,
+        }
+
+        await this.attachmentRepository.saveAttachment(attachmentData)
+        return attachmentData
+    }
+
     async getAttachmentById(attachmentId: string): Promise<AttachmentData | null> {
         return this.attachmentRepository.getAttachmentById(attachmentId)
     }

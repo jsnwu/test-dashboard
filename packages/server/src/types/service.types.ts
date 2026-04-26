@@ -12,6 +12,12 @@ export interface ITestService {
     clearAllTests(): Promise<void>
     cleanupData(options: CleanupOptions): Promise<CleanupResult>
     saveTestResult(testData: TestResultData): Promise<string>
+    uploadAttachmentForTestResult(params: {
+        testResultId: string
+        type: 'video' | 'screenshot' | 'trace' | 'log'
+        fileName: string
+        buffer: Buffer
+    }): Promise<void>
     getTestStats(): Promise<DatabaseStats>
     getTraceFileById(attachmentId: string): Promise<{filePath: string; fileName: string} | null>
 }

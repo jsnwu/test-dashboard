@@ -2,7 +2,7 @@ import {Router} from 'express'
 import {TestController} from '../controllers/test.controller'
 import {NoteController} from '../controllers/note.controller'
 import {NoteImageController} from '../controllers/noteImage.controller'
-import {uploadSingleImage} from '../middleware/upload.middleware'
+import {uploadSingleAttachment, uploadSingleImage} from '../middleware/upload.middleware'
 import {ServiceContainer} from '../middleware/service-injection.middleware'
 
 export function createTestRoutes(container: ServiceContainer): Router {
@@ -40,6 +40,7 @@ export function createTestRoutes(container: ServiceContainer): Router {
     router.post('/:id/rerun', testController.rerunTest)
     router.get('/:id/history', testController.getTestHistory)
     router.get('/:id/attachments', testController.getTestAttachments)
+    router.post('/:id/attachments/upload', uploadSingleAttachment, testController.uploadAttachment)
 
     // Note endpoints
     router.get('/:testId/notes', noteController.getNote)

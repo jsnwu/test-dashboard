@@ -167,51 +167,54 @@ describe('YShvydakReporter - Integration Tests', () => {
             reporter = new YShvydakReporter()
         })
 
-        it('should notify dashboard on test run start', () => {
+        it('should notify dashboard on test run start', async () => {
             const suite = createMockSuite(5)
             const config = {} as FullConfig
 
-            reporter.onBegin(config, suite)
+            await reporter.onBegin(config, suite)
 
-            expect(mockFetch).toHaveBeenCalledWith(
-                expect.stringContaining('/api/tests/process-start'),
-                expect.objectContaining({
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: expect.stringContaining('"type":"run-all"'),
-                })
+            // onBegin creates a run record first, then notifies process start.
+            const createRunCall = mockFetch.mock.calls.find(([url]) =>
+                String(url).includes('/api/runs')
             )
+            expect(createRunCall).toBeTruthy()
 
-            const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-            expect(callBody).toMatchObject({
-                type: 'run-all',
-                totalTests: 5,
-            })
+            const processStartCall = mockFetch.mock.calls.find(([url]) =>
+                String(url).includes('/api/tests/process-start')
+            )
+            expect(processStartCall).toBeTruthy()
+
+            const callBody = JSON.parse((processStartCall as any)[1].body)
+            expect(callBody).toMatchObject({type: 'run-all', totalTests: 5})
             expect(callBody.runId).toBeTruthy()
         })
 
-        it('should notify dashboard with rerun type in rerun mode', () => {
+        it('should notify dashboard with rerun type in rerun mode', async () => {
             process.env.RERUN_MODE = 'true'
             const suite = createMockSuite(1)
 
-            reporter.onBegin({} as FullConfig, suite)
+            await reporter.onBegin({} as FullConfig, suite)
 
-            const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-            expect(callBody).toMatchObject({
-                type: 'rerun',
-                totalTests: 1,
-            })
+            const processStartCall = mockFetch.mock.calls.find(([url]) =>
+                String(url).includes('/api/tests/process-start')
+            )
+            expect(processStartCall).toBeTruthy()
+
+            const callBody = JSON.parse((processStartCall as any)[1].body)
+            expect(callBody).toMatchObject({type: 'rerun', totalTests: 1})
         })
 
-        it('should log test count on begin', () => {
+        it('should log test count on begin', async () => {
             const suite = createMockSuite(10)
             const config = {} as FullConfig
 
-            reporter.onBegin(config, suite)
+            await reporter.onBegin(config, suite)
 
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('Starting test run with 10 tests')
-            )
+            expect(
+                consoleLogSpy.mock.calls.some(([msg]: unknown[]) =>
+                    String(msg).includes('Starting test run with 10 tests')
+                )
+            ).toBe(true)
         })
 
         it('should handle API error during process start', async () => {
@@ -283,21 +286,24 @@ describe('YShvydakReporter - Integration Tests', () => {
             )
         })
 
-        it('should send test result to API on test completion', () => {
+        it('should send test result to API on test completion', async () => {
             const testCase = createMockTestCase('should pass', 'passed')
             const result = createMockTestResult('passed', {duration: 1500})
 
-            reporter.onTestEnd(testCase, result)
+            await reporter.onTestEnd(testCase, result)
 
-            expect(mockFetch).toHaveBeenCalledWith(
-                expect.stringContaining('/api/tests'),
-                expect.objectContaining({
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                })
-            )
+            const testCall = mockFetch.mock.calls.find(([url, init]) => {
+                return (
+                    typeof url === 'string' &&
+                    url.includes('/api/tests') &&
+                    init?.method === 'POST' &&
+                    init?.headers &&
+                    (init.headers as any)['Content-Type'] === 'application/json'
+                )
+            })
+            expect(testCall).toBeTruthy()
 
-            const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+            const callBody = JSON.parse((testCall as any)[1].body)
             expect(callBody).toMatchObject({
                 name: 'should pass',
                 status: 'passed',
@@ -307,18 +313,19 @@ describe('YShvydakReporter - Integration Tests', () => {
             expect(callBody.id).toMatch(/^[a-f0-9-]{36}$/)
         })
 
-        it('should log test result with status icon', () => {
+        it('should log test result with status icon', async () => {
             const testCase = createMockTestCase('should pass', 'passed')
             const result = createMockTestResult('passed', {duration: 1500})
 
-            reporter.onTestEnd(testCase, result)
+            await reporter.onTestEnd(testCase, result)
 
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('✅'))
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('should pass'))
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('1500ms'))
+            const logs = consoleLogSpy.mock.calls.map((c: unknown[]) => String(c[0]))
+            expect(logs.some((l: string) => l.includes('✅'))).toBe(true)
+            expect(logs.some((l: string) => l.includes('should pass'))).toBe(true)
+            expect(logs.some((l: string) => l.includes('1500ms'))).toBe(true)
         })
 
-        it('should handle failed test with error message', () => {
+        it('should handle failed test with error message', async () => {
             const testCase = createMockTestCase('should fail', 'failed')
             const result = createMockTestResult('failed', {
                 duration: 500,
@@ -330,14 +337,17 @@ describe('YShvydakReporter - Integration Tests', () => {
 
             vi.mocked(fs.readFileSync).mockReturnValue('test code content\nexpect(1).toBe(2)')
 
-            reporter.onTestEnd(testCase, result)
+            await reporter.onTestEnd(testCase, result)
 
-            const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+            const testCall = mockFetch.mock.calls.find(([url]) => {
+                return typeof url === 'string' && url.includes('/api/tests')
+            })
+            const callBody = JSON.parse((testCall as any)[1].body)
             expect(callBody.status).toBe('failed')
             expect(callBody.errorMessage).toContain('Expected 1 to equal 2')
         })
 
-        it('should process attachments correctly', () => {
+        it('should process attachments correctly', async () => {
             const testCase = createMockTestCase('test with attachments', 'passed')
             const result = createMockTestResult('passed', {
                 attachments: [
@@ -347,9 +357,12 @@ describe('YShvydakReporter - Integration Tests', () => {
                 ],
             })
 
-            reporter.onTestEnd(testCase, result)
+            await reporter.onTestEnd(testCase, result)
 
-            const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+            const testCall = mockFetch.mock.calls.find(([url]) => {
+                return typeof url === 'string' && url.includes('/api/tests')
+            })
+            const callBody = JSON.parse((testCall as any)[1].body)
             expect(callBody.attachments).toHaveLength(3)
             expect(callBody.attachments[0]).toMatchObject({
                 name: 'screenshot',
@@ -785,12 +798,13 @@ test('example test', async () => {
 
             // 1. Start test run
             const suite = createMockSuite(3)
-            reporter.onBegin({} as FullConfig, suite)
+            await reporter.onBegin({} as FullConfig, suite)
 
-            expect(mockFetch).toHaveBeenCalledWith(
-                'http://test-api:4000/api/tests/process-start',
-                expect.any(Object)
-            )
+            expect(
+                mockFetch.mock.calls.some(([url]) =>
+                    String(url).includes('http://test-api:4000/api/tests/process-start')
+                )
+            ).toBe(true)
 
             // 2. Report test results
             reporter.onTestEnd(
@@ -809,7 +823,7 @@ test('example test', async () => {
                 })
             )
 
-            expect(mockFetch).toHaveBeenCalledTimes(4) // 1 process-start + 3 tests
+            expect(mockFetch).toHaveBeenCalledTimes(5) // 1 create-run + 1 process-start + 3 tests
 
             // 3. Complete test run
             mockFetch.mockClear()

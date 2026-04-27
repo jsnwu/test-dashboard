@@ -1,4 +1,4 @@
-import {useEffect, useLayoutEffect, useState} from 'react'
+import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {useQueryClient} from '@tanstack/react-query'
 import type {TestResult, TestRun} from 'test-dashboard-core'
 import {Badge, Button, SearchInput} from '@shared/components'
@@ -13,6 +13,7 @@ import {
     releaseModalBodyScrollLock,
 } from '@shared/utils/modalBodyScrollLock'
 import {FilterKey} from '@features/tests/constants'
+import {useTestGroups} from '@features/tests/hooks'
 import {useTestsStore} from '@features/tests/store/testsStore'
 import {parseTestNameTags} from '@features/tests/utils'
 import {openAttachmentInNewWindow, openTraceViewer} from '@features/tests/utils/attachmentHelpers'
@@ -34,6 +35,103 @@ export interface RunDetailModalProps {
     onTestRowClick: (test: TestResult) => void
 }
 
+function RunDetailModalTestRow({
+    test: t,
+    onTestRowClick,
+}: {
+    test: TestResult
+    onTestRowClick: (test: TestResult) => void
+}) {
+    const {displayName, tags} = parseTestNameTags(t.name || '')
+    const title = displayName ? displayName : tags.length > 0 ? '—' : t.name || ''
+    const trace = (t.attachments || []).find((a) => a.type === 'trace')
+    const video = (t.attachments || []).find((a) => a.type === 'video')
+    const screenshot = (t.attachments || []).find((a) => a.type === 'screenshot')
+
+    return (
+        <tr
+            role="button"
+            tabIndex={0}
+            aria-label={`Open test: ${t.name}`}
+            className="border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+            onClick={() => onTestRowClick(t)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onTestRowClick(t)
+                }
+            }}>
+            <td className="py-2.5 px-3 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                {t.status === 'passed'
+                    ? '✅ passed'
+                    : t.status === 'failed'
+                      ? '❌ failed'
+                      : t.status === 'skipped'
+                        ? '⏭️ skipped'
+                        : t.status}
+            </td>
+            <td className="py-2.5 px-3 text-sm text-gray-900 dark:text-white">{title}</td>
+            <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400">
+                {tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                        {tags.map((tag) => (
+                            <Badge key={tag} variant="neutral" size="sm" className="font-mono">
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                )}
+            </td>
+            <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                {trace || video || screenshot ? (
+                    <div className="flex items-center gap-2">
+                        {screenshot && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    openAttachmentInNewWindow(screenshot as any, () => {})
+                                }}
+                                className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                title="View screenshot">
+                                Screenshot
+                            </button>
+                        )}
+                        {video && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    openAttachmentInNewWindow(video as any, () => {})
+                                }}
+                                className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                title="Open video in a new tab">
+                                Video
+                            </button>
+                        )}
+                        {trace && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    openTraceViewer(trace as any, () => {})
+                                }}
+                                className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
+                                title="Open in Playwright Trace Viewer">
+                                Trace
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                )}
+            </td>
+        </tr>
+    )
+}
+
 export function RunDetailModal({
     run,
     isOpen,
@@ -51,12 +149,35 @@ export function RunDetailModal({
 }: RunDetailModalProps) {
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [collapsedGroupPaths, setCollapsedGroupPaths] = useState<ReadonlySet<string>>(
+        () => new Set()
+    )
+    const skipOnlyDefaultAppliedRunIdRef = useRef<string | undefined>(undefined)
     const deleteRun = useTestsStore((s) => s.deleteRun)
     const queryClient = useQueryClient()
+    const groupedTests = useTestGroups(filteredTests)
 
     useEffect(() => {
         setShowDeleteConfirmation(false)
     }, [run?.id])
+
+    useEffect(() => {
+        skipOnlyDefaultAppliedRunIdRef.current = undefined
+    }, [run?.id])
+
+    useEffect(() => {
+        if (!run?.id || groupedTests.length === 0) return
+        if (skipOnlyDefaultAppliedRunIdRef.current === run.id) return
+        skipOnlyDefaultAppliedRunIdRef.current = run.id
+
+        const skipOnlyCollapsed = new Set<string>()
+        for (const g of groupedTests) {
+            if (g.total > 0 && g.skipped === g.total) {
+                skipOnlyCollapsed.add(g.filePath)
+            }
+        }
+        setCollapsedGroupPaths(skipOnlyCollapsed)
+    }, [run?.id, groupedTests])
 
     useLayoutEffect(() => {
         if (!isOpen) return
@@ -95,6 +216,18 @@ export function RunDetailModal({
         } finally {
             setIsDeleting(false)
         }
+    }
+
+    const toggleGroupCollapsed = (filePath: string) => {
+        setCollapsedGroupPaths((prev) => {
+            const next = new Set(prev)
+            if (next.has(filePath)) {
+                next.delete(filePath)
+            } else {
+                next.add(filePath)
+            }
+            return next
+        })
     }
 
     if (!isOpen) return null
@@ -260,16 +393,13 @@ export function RunDetailModal({
                                                 <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-44">
                                                     Artifacts
                                                 </th>
-                                                <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                                                    File
-                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {runTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={5}
+                                                        colSpan={4}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests in this run.
                                                     </td>
@@ -277,148 +407,102 @@ export function RunDetailModal({
                                             ) : filteredTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={5}
+                                                        colSpan={4}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests match this filter.
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                filteredTests.map((t) =>
-                                                    (() => {
-                                                        const {displayName, tags} =
-                                                            parseTestNameTags(t.name || '')
-                                                        const title = displayName
-                                                            ? displayName
-                                                            : tags.length > 0
-                                                              ? '—'
-                                                              : t.name || ''
-                                                        const trace = (t.attachments || []).find(
-                                                            (a) => a.type === 'trace'
-                                                        )
-                                                        const video = (t.attachments || []).find(
-                                                            (a) => a.type === 'video'
-                                                        )
-                                                        const screenshot = (
-                                                            t.attachments || []
-                                                        ).find((a) => a.type === 'screenshot')
-                                                        return (
+                                                groupedTests.map((group) => {
+                                                    const expanded = !collapsedGroupPaths.has(
+                                                        group.filePath
+                                                    )
+                                                    return (
+                                                        <Fragment key={group.filePath}>
                                                             <tr
-                                                                key={t.id}
+                                                                className="bg-gray-100 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200/80 dark:hover:bg-gray-700/80 transition-colors"
                                                                 role="button"
                                                                 tabIndex={0}
-                                                                aria-label={`Open test: ${t.name}`}
-                                                                className="border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                                                                onClick={() => onTestRowClick(t)}
+                                                                aria-expanded={expanded}
+                                                                aria-label={`${expanded ? 'Collapse' : 'Expand'} file group: ${group.filePath}`}
+                                                                onClick={() =>
+                                                                    toggleGroupCollapsed(
+                                                                        group.filePath
+                                                                    )
+                                                                }
                                                                 onKeyDown={(e) => {
                                                                     if (
                                                                         e.key === 'Enter' ||
                                                                         e.key === ' '
                                                                     ) {
                                                                         e.preventDefault()
-                                                                        onTestRowClick(t)
+                                                                        toggleGroupCollapsed(
+                                                                            group.filePath
+                                                                        )
                                                                     }
                                                                 }}>
-                                                                <td className="py-2.5 px-3 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                                                    {t.status === 'passed'
-                                                                        ? '✅ passed'
-                                                                        : t.status === 'failed'
-                                                                          ? '❌ failed'
-                                                                          : t.status === 'skipped'
-                                                                            ? '⏭️ skipped'
-                                                                            : t.status}
-                                                                </td>
-                                                                <td className="py-2.5 px-3 text-sm text-gray-900 dark:text-white">
-                                                                    {title}
-                                                                </td>
-                                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                    {tags.length > 0 ? (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            {tags.map((tag) => (
-                                                                                <Badge
-                                                                                    key={tag}
-                                                                                    variant="neutral"
-                                                                                    size="sm"
-                                                                                    className="font-mono">
-                                                                                    {tag}
-                                                                                </Badge>
-                                                                            ))}
+                                                                <td
+                                                                    colSpan={4}
+                                                                    className="py-2.5 px-3 text-xs text-gray-800 dark:text-gray-200">
+                                                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                                                                {expanded
+                                                                                    ? '▼'
+                                                                                    : '▶'}
+                                                                            </span>
+                                                                            <span className="font-medium font-mono truncate">
+                                                                                {group.filePath}
+                                                                            </span>
                                                                         </div>
-                                                                    ) : (
-                                                                        <span className="text-gray-400 dark:text-gray-500">
-                                                                            —
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                                                    {trace ||
-                                                                    video ||
-                                                                    screenshot ? (
-                                                                        <div className="flex items-center gap-2">
-                                                                            {screenshot && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={(
-                                                                                        e
-                                                                                    ) => {
-                                                                                        e.stopPropagation()
-                                                                                        openAttachmentInNewWindow(
-                                                                                            screenshot as any,
-                                                                                            () => {}
-                                                                                        )
-                                                                                    }}
-                                                                                    className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                                                                    title="View screenshot">
-                                                                                    Screenshot
-                                                                                </button>
+                                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-600 dark:text-gray-400 sm:justify-end pl-5 sm:pl-0">
+                                                                            <span>
+                                                                                {group.total} test
+                                                                                {group.total !== 1
+                                                                                    ? 's'
+                                                                                    : ''}
+                                                                            </span>
+                                                                            {group.passed > 0 && (
+                                                                                <span className="text-success-600 dark:text-success-400">
+                                                                                    ✅{' '}
+                                                                                    {group.passed}
+                                                                                </span>
                                                                             )}
-                                                                            {video && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={(
-                                                                                        e
-                                                                                    ) => {
-                                                                                        e.stopPropagation()
-                                                                                        openAttachmentInNewWindow(
-                                                                                            video as any,
-                                                                                            () => {}
-                                                                                        )
-                                                                                    }}
-                                                                                    className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                                                                                    title="Open video in a new tab">
-                                                                                    Video
-                                                                                </button>
+                                                                            {group.failed > 0 && (
+                                                                                <span className="text-danger-600 dark:text-danger-400">
+                                                                                    ❌{' '}
+                                                                                    {group.failed}
+                                                                                </span>
                                                                             )}
-                                                                            {trace && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={(
-                                                                                        e
-                                                                                    ) => {
-                                                                                        e.stopPropagation()
-                                                                                        openTraceViewer(
-                                                                                            trace as any,
-                                                                                            () => {}
-                                                                                        )
-                                                                                    }}
-                                                                                    className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
-                                                                                    title="Open in Playwright Trace Viewer">
-                                                                                    Trace
-                                                                                </button>
+                                                                            {group.skipped > 0 && (
+                                                                                <span className="text-warning-600 dark:text-warning-400">
+                                                                                    ⏭️{' '}
+                                                                                    {group.skipped}
+                                                                                </span>
+                                                                            )}
+                                                                            {group.pending > 0 && (
+                                                                                <span className="text-blue-600 dark:text-blue-400">
+                                                                                    ⏸️{' '}
+                                                                                    {group.pending}
+                                                                                </span>
                                                                             )}
                                                                         </div>
-                                                                    ) : (
-                                                                        <span className="text-gray-400 dark:text-gray-500">
-                                                                            —
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                                                                    {t.filePath}
+                                                                    </div>
                                                                 </td>
                                                             </tr>
-                                                        )
-                                                    })()
-                                                )
+                                                            {expanded &&
+                                                                group.tests.map((t) => (
+                                                                    <RunDetailModalTestRow
+                                                                        key={t.id}
+                                                                        test={t}
+                                                                        onTestRowClick={
+                                                                            onTestRowClick
+                                                                        }
+                                                                    />
+                                                                ))}
+                                                        </Fragment>
+                                                    )
+                                                })
                                             )}
                                         </tbody>
                                     </table>

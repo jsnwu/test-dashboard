@@ -23,6 +23,7 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 ## ✨ Why This Dashboard?
 
 ### The Problem
+
 - **Team Visibility**: Hard to share test status with stakeholders
 - **Traceability**: Hard to trace down the exact failure of a test
 - **Historical Context**: No easy way to track test trends over time
@@ -38,6 +39,7 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 ## 🎪 Key Features
 
 ### 📊 **Comprehensive Dashboard**
+
 - Configurable project and environment
 - Live test execution monitoring
 - Real-time feedback on test progress

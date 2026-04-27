@@ -187,6 +187,10 @@ export function ResultsPage() {
         if (project) {
             params.set('project', project)
         }
+        const env = searchParams.get('env')
+        if (env) {
+            params.set('env', env)
+        }
         params.set('from', 'results')
         if (sourceRunId) {
             params.set('returnRun', sourceRunId)

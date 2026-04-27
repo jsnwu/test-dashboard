@@ -120,7 +120,7 @@ export const FloatingProgressPanel = () => {
     }
 
     return (
-        <div className="fixed bottom-3 left-3 right-3 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 transition-all md:bottom-4 md:left-[calc(14rem+0.75rem)] md:right-4 md:w-auto md:max-w-96">
+        <div className="fixed bottom-3 right-3 z-50 w-[calc(100vw-1.5rem)] max-w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 transition-all md:bottom-4 md:right-4">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">

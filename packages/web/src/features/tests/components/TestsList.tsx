@@ -198,6 +198,10 @@ export default function TestsList({onTestSelect, selectedTest, loading}: TestsLi
         if (project) {
             params.set('project', project)
         }
+        const env = searchParams.get('env')
+        if (env) {
+            params.set('env', env)
+        }
         const returnRun = searchParams.get('returnRun')
         if (returnRun) {
             params.set('openRun', returnRun)

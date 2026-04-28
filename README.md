@@ -1,6 +1,6 @@
 # Test Dashboard
 
-Forked and customized from `shvydak/yshvydak-test-dashboard` for local workflows and repo-internal reporter development.
+Forked and customized from `shvydak/yshvydak-test-dashboard`.
 
 ![Dashboard screenshot](docs/images/dashboard.png)
 
@@ -11,6 +11,9 @@ Key changes in this fork:
 - Add **project** configuration + filtering
 - Add **target environment** configuration + filtering
 - Enchance test artifacts with video and trace viewer
+- Admin project and env mangagement
+- Remove rerun feature which is not that useful
+- Fixing bugs
 
 > 🎭 **Modern, full-stack dashboard for Playwright tests **
 
@@ -422,13 +425,3 @@ Comprehensive documentation for users, developers, and contributors:
 - **[docs/README.md](docs/README.md)** - Complete documentation navigation with role-based guidance
 
 **Documentation Quality**: 9.5/10 - Optimized for AI-assisted development (vibe coding)
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Playwright](https://playwright.dev/) - the amazing testing framework
-- Inspired by the need for better test visibility and team collaboration
-- Thanks to all contributors who help improve the testing experience

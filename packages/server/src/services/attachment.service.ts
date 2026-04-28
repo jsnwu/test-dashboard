@@ -36,7 +36,7 @@ export class AttachmentService implements IAttachmentService {
                 const sourceFilePath = attachment.path
 
                 if (!fs.existsSync(sourceFilePath)) {
-                    Logger.warn(`[AttachmentService] Source file not found: ${sourceFilePath}`)
+                    console.warn(`[AttachmentService] Source file not found: ${sourceFilePath}`)
                     continue
                 }
 

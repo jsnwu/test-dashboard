@@ -102,3 +102,38 @@ describe('GET /api/tests/projects - Get Available Projects (Integration)', () =>
         })
     })
 })
+
+describe('GET /api/tests/project-tags - Get Dashboard Project Tags (Integration)', () => {
+    let server: TestServerInstance
+
+    beforeAll(async () => {
+        server = await setupTestServer()
+    })
+
+    afterAll(async () => {
+        await teardownTestServer(server)
+    })
+
+    beforeEach(async () => {
+        await cleanDatabase(server.testRepository)
+        vi.restoreAllMocks()
+    })
+
+    it('should return distinct project tags from runs', async () => {
+        // Arrange: mock repository method directly for deterministic result
+        vi.spyOn(server.serviceContainer.runRepository, 'getDistinctRunProjectTags').mockResolvedValue([
+            'slice-dice',
+            'chromium',
+        ])
+
+        const response = await request(server.app)
+            .get('/api/tests/project-tags')
+            .set('Authorization', `Bearer ${server.authToken}`)
+            .expect(200)
+
+        expect(response.body).toMatchObject({
+            success: true,
+            data: ['slice-dice', 'chromium'],
+        })
+    })
+})

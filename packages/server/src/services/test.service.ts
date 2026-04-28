@@ -273,6 +273,135 @@ export class TestService implements ITestService {
         return Array.from(merged).sort((a, b) => a.localeCompare(b))
     }
 
+    /**
+     * Project tags stored on runs/results (metadata.project), used for dashboard filtering.
+     */
+    async getProjectTags(): Promise<string[]> {
+        return this.runRepository.getDistinctRunProjectTags()
+    }
+
+    async getTargetEnvTags(): Promise<string[]> {
+        return this.runRepository.getDistinctRunTargetEnvTags()
+    }
+
+    async getProjectTagSummaries(): Promise<
+        Array<{project: string; runCount: number; executionCount: number; lastRunAt: string | null}>
+    > {
+        return this.runRepository.getProjectTagSummaries()
+    }
+
+    async deleteProjectTag(projectTag: string): Promise<{
+        deletedRuns: number
+        deletedExecutions: number
+        deletedNotes: number
+        freedSpace: number
+    }> {
+        if (!projectTag || projectTag.trim() === '') {
+            throw new Error('Project tag is required')
+        }
+
+        // Prevent deletion if tests are running
+        if (activeProcessesTracker.isAnyProcessRunning()) {
+            throw new Error('Cannot delete project data while tests are running')
+        }
+
+        const tag = projectTag.trim()
+
+        const [executionIds, testIds] = await Promise.all([
+            this.testRepository.getExecutionIdsByProjectTag(tag),
+            this.testRepository.getDistinctTestIdsByProjectTag(tag),
+        ])
+
+        // Delete attachments first (physical files) so we don't orphan storage.
+        const statsBefore = await this.attachmentService.getStorageStats()
+        for (const id of executionIds) {
+            try {
+                await this.attachmentService.deleteAttachmentsForTestResult(id)
+            } catch (error) {
+                Logger.warn(`Failed to delete attachments for execution ${id}`, error)
+            }
+        }
+        const statsAfter = await this.attachmentService.getStorageStats()
+        const freedSpace = statsBefore.totalSize - statsAfter.totalSize
+
+        // Delete notes (and their images) for tests that appear in this project.
+        let deletedNotes = 0
+        for (const testId of testIds) {
+            try {
+                await this.noteService.deleteNote(testId)
+                deletedNotes++
+            } catch (error) {
+                // If no note existed, deleteNote may throw depending on repository behavior; treat as best-effort.
+                Logger.warn(`Note deletion skipped for test ${testId}`, error)
+            }
+        }
+
+        // Delete DB records.
+        const deletedExecutions = executionIds.length
+            ? await this.testRepository.deleteByIds(executionIds)
+            : 0
+
+        const deletedRuns = await this.runRepository.deleteRunsByProjectTag(tag)
+
+        return {deletedRuns, deletedExecutions, deletedNotes, freedSpace}
+    }
+
+    async getTargetEnvSummaries(): Promise<
+        Array<{targetEnv: string; runCount: number; executionCount: number; lastRunAt: string | null}>
+    > {
+        return this.runRepository.getTargetEnvSummaries()
+    }
+
+    async deleteTargetEnv(targetEnv: string): Promise<{
+        deletedRuns: number
+        deletedExecutions: number
+        deletedNotes: number
+        freedSpace: number
+    }> {
+        if (!targetEnv || targetEnv.trim() === '') {
+            throw new Error('Target env is required')
+        }
+
+        if (activeProcessesTracker.isAnyProcessRunning()) {
+            throw new Error('Cannot delete target env data while tests are running')
+        }
+
+        const env = targetEnv.trim()
+
+        const [executionIds, testIds] = await Promise.all([
+            this.testRepository.getExecutionIdsByTargetEnv(env),
+            this.testRepository.getDistinctTestIdsByTargetEnv(env),
+        ])
+
+        const statsBefore = await this.attachmentService.getStorageStats()
+        for (const id of executionIds) {
+            try {
+                await this.attachmentService.deleteAttachmentsForTestResult(id)
+            } catch (error) {
+                Logger.warn(`Failed to delete attachments for execution ${id}`, error)
+            }
+        }
+        const statsAfter = await this.attachmentService.getStorageStats()
+        const freedSpace = statsBefore.totalSize - statsAfter.totalSize
+
+        let deletedNotes = 0
+        for (const testId of testIds) {
+            try {
+                await this.noteService.deleteNote(testId)
+                deletedNotes++
+            } catch (error) {
+                Logger.warn(`Note deletion skipped for test ${testId}`, error)
+            }
+        }
+
+        const deletedExecutions = executionIds.length
+            ? await this.testRepository.deleteByIds(executionIds)
+            : 0
+        const deletedRuns = await this.runRepository.deleteRunsByTargetEnv(env)
+
+        return {deletedRuns, deletedExecutions, deletedNotes, freedSpace}
+    }
+
     async runAllTests(
         maxWorkers?: number,
         skipAutoDiscovery?: boolean,

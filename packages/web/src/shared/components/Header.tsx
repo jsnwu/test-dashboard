@@ -59,6 +59,7 @@ export default function Header({
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [projects, setProjects] = useState<string[]>([])
+    const [targetEnvs, setTargetEnvs] = useState<string[]>([])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -90,7 +91,7 @@ export default function Header({
     useEffect(() => {
         const loadProjects = async () => {
             try {
-                const response = await authGet(`${config.api.baseUrl}/tests/projects`)
+                const response = await authGet(`${config.api.baseUrl}/tests/project-tags`)
                 if (!response.ok) return
                 const data = await response.json()
                 if (data?.success && Array.isArray(data.data)) {
@@ -102,6 +103,23 @@ export default function Header({
         }
 
         loadProjects()
+    }, [])
+
+    useEffect(() => {
+        const loadTargetEnvs = async () => {
+            try {
+                const response = await authGet(`${config.api.baseUrl}/tests/target-envs`)
+                if (!response.ok) return
+                const data = await response.json()
+                if (data?.success && Array.isArray(data.data)) {
+                    setTargetEnvs(data.data)
+                }
+            } catch {
+                // ignore
+            }
+        }
+
+        loadTargetEnvs()
     }, [])
 
     const handleLogout = () => {
@@ -235,19 +253,33 @@ export default function Header({
             <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                 Target env
             </p>
-            <select
-                value={selectedTargetEnv}
-                onChange={(e) => setSelectedTargetEnv(e.target.value)}
-                className={
-                    fullWidthSelect
-                        ? 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-2 text-gray-700 dark:text-gray-200'
-                        : 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-gray-700 dark:text-gray-200'
-                }>
-                <option value="">All</option>
-                <option value="local">Local</option>
-                <option value="staging">Staging</option>
-                <option value="prod">Prod</option>
-            </select>
+            {(() => {
+                // Use backend-derived tags to match the admin page.
+                // Fall back to Local/Staging/Prod only when no tags are available yet.
+                const baseOptions = targetEnvs.length ? targetEnvs : ['local', 'staging', 'prod']
+                const merged = Array.from(new Set(baseOptions))
+                const options =
+                    selectedTargetEnv && !merged.includes(selectedTargetEnv)
+                        ? [selectedTargetEnv, ...merged]
+                        : merged
+                return (
+                    <select
+                        value={selectedTargetEnv}
+                        onChange={(e) => setSelectedTargetEnv(e.target.value)}
+                        className={
+                            fullWidthSelect
+                                ? 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-2 text-gray-700 dark:text-gray-200'
+                                : 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-gray-700 dark:text-gray-200'
+                        }>
+                        <option value="">All</option>
+                        {options.map((e) => (
+                            <option key={e} value={e}>
+                                {e}
+                            </option>
+                        ))}
+                    </select>
+                )
+            })()}
         </div>
     )
 

@@ -151,6 +151,65 @@ export class TestRepository extends BaseRepository implements ITestRepository {
         return this.mapRowsToTestResults(rows)
     }
 
+    /**
+     * Execution ids for all test_results belonging to runs tagged with `metadata.project = projectTag`.
+     */
+    async getExecutionIdsByProjectTag(projectTag: string): Promise<string[]> {
+        const rows = await this.queryAll<{id: string}>(
+            `
+            SELECT tr.id as id
+            FROM test_results tr
+            INNER JOIN test_runs r ON tr.run_id = r.id
+            WHERE json_extract(r.metadata, '$.project') = ?
+            `,
+            [projectTag]
+        )
+        return rows.map((r) => r.id)
+    }
+
+    /**
+     * Distinct stable test ids for all results belonging to runs tagged with `metadata.project = projectTag`.
+     * Used for cleaning up per-test notes/images.
+     */
+    async getDistinctTestIdsByProjectTag(projectTag: string): Promise<string[]> {
+        const rows = await this.queryAll<{testId: string}>(
+            `
+            SELECT DISTINCT tr.test_id as testId
+            FROM test_results tr
+            INNER JOIN test_runs r ON tr.run_id = r.id
+            WHERE json_extract(r.metadata, '$.project') = ?
+            `,
+            [projectTag]
+        )
+        return rows.map((r) => r.testId)
+    }
+
+    async getExecutionIdsByTargetEnv(targetEnv: string): Promise<string[]> {
+        const rows = await this.queryAll<{id: string}>(
+            `
+            SELECT tr.id as id
+            FROM test_results tr
+            INNER JOIN test_runs r ON tr.run_id = r.id
+            WHERE json_extract(r.metadata, '$.targetEnv') = ?
+            `,
+            [targetEnv]
+        )
+        return rows.map((r) => r.id)
+    }
+
+    async getDistinctTestIdsByTargetEnv(targetEnv: string): Promise<string[]> {
+        const rows = await this.queryAll<{testId: string}>(
+            `
+            SELECT DISTINCT tr.test_id as testId
+            FROM test_results tr
+            INNER JOIN test_runs r ON tr.run_id = r.id
+            WHERE json_extract(r.metadata, '$.targetEnv') = ?
+            `,
+            [targetEnv]
+        )
+        return rows.map((r) => r.testId)
+    }
+
     async deleteByTestId(testId: string): Promise<number> {
         const result = await this.dbManager.execute(`DELETE FROM test_results WHERE test_id = ?`, [
             testId,

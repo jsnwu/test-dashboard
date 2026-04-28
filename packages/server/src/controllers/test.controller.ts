@@ -47,6 +47,38 @@ export class TestController {
         }
     }
 
+    // GET /api/tests/project-tags - Get available dashboard project tags (metadata.project)
+    getProjectTags = async (_req: ServiceRequest, res: Response): Promise<Response> => {
+        try {
+            const projects = await this.testService.getProjectTags()
+            return ResponseHelper.success(res, projects)
+        } catch (error) {
+            Logger.error('Error fetching project tags', error)
+            return ResponseHelper.error(
+                res,
+                error instanceof Error ? error.message : 'Unknown error',
+                'Failed to fetch project tags',
+                500
+            )
+        }
+    }
+
+    // GET /api/tests/target-envs - Get available dashboard target env tags (metadata.targetEnv)
+    getTargetEnvs = async (_req: ServiceRequest, res: Response): Promise<Response> => {
+        try {
+            const envs = await this.testService.getTargetEnvTags()
+            return ResponseHelper.success(res, envs)
+        } catch (error) {
+            Logger.error('Error fetching target env tags', error)
+            return ResponseHelper.error(
+                res,
+                error instanceof Error ? error.message : 'Unknown error',
+                'Failed to fetch target env tags',
+                500
+            )
+        }
+    }
+
     // POST /api/tests/run-all - Run all tests
     runAllTests = async (req: ServiceRequest, res: Response): Promise<void> => {
         try {

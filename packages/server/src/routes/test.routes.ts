@@ -14,6 +14,8 @@ export function createTestRoutes(container: ServiceContainer): Router {
     // Test management endpoints
     router.post('/discovery', testController.discoverTests)
     router.get('/projects', testController.getAvailableProjects)
+    router.get('/project-tags', testController.getProjectTags)
+    router.get('/target-envs', testController.getTargetEnvs)
     router.post('/run-all', testController.runAllTests)
     router.post('/run-group', testController.runTestGroup)
 

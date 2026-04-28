@@ -27,6 +27,7 @@ vi.mock('../activeProcesses.service', () => ({
     activeProcessesTracker: {
         addProcess: vi.fn(),
         removeProcess: vi.fn(),
+        isAnyProcessRunning: vi.fn(() => false),
         isProcessRunning: vi.fn(() => true),
         isRunAllActive: vi.fn(() => false),
         getActiveProcesses: vi.fn(() => []),
@@ -69,10 +70,15 @@ describe('TestService', () => {
             getTestResultsByTestId: vi.fn(),
             deleteByTestId: vi.fn(),
             deleteByExecutionId: vi.fn(),
+            deleteByIds: vi.fn().mockResolvedValue(0),
             clearAllTests: vi.fn(),
             getTestStats: vi.fn(),
             getFlakyTests: vi.fn(),
             getTestTimeline: vi.fn(),
+            getExecutionIdsByProjectTag: vi.fn().mockResolvedValue([]),
+            getDistinctTestIdsByProjectTag: vi.fn().mockResolvedValue([]),
+            getExecutionIdsByTargetEnv: vi.fn().mockResolvedValue([]),
+            getDistinctTestIdsByTargetEnv: vi.fn().mockResolvedValue([]),
         }
 
         mockRunRepository = {
@@ -80,6 +86,10 @@ describe('TestService', () => {
             updateTestRun: vi.fn(),
             getTestRun: vi.fn(),
             getDistinctRunProjectTags: vi.fn().mockResolvedValue([]),
+            getProjectTagSummaries: vi.fn().mockResolvedValue([]),
+            deleteRunsByProjectTag: vi.fn().mockResolvedValue(0),
+            getTargetEnvSummaries: vi.fn().mockResolvedValue([]),
+            deleteRunsByTargetEnv: vi.fn().mockResolvedValue(0),
         }
 
         mockPlaywrightService = {
@@ -106,6 +116,7 @@ describe('TestService', () => {
             getAttachmentById: vi.fn(),
             clearAllAttachments: vi.fn(),
             deleteAttachmentsForTestResult: vi.fn(),
+            getStorageStats: vi.fn().mockResolvedValue({totalFiles: 0, totalSize: 0, testDirectories: 0, typeBreakdown: {}}),
         }
 
         mockNoteService = {
@@ -624,6 +635,71 @@ describe('TestService', () => {
             const result = await testService.getAvailableProjects()
 
             expect(result).toEqual([])
+        })
+    })
+
+    describe('getProjectTags', () => {
+        it('should return distinct run metadata.project tags', async () => {
+            mockRunRepository.getDistinctRunProjectTags.mockResolvedValue(['slice-dice', 'chromium'])
+
+            const result = await testService.getProjectTags()
+
+            expect(result).toEqual(['slice-dice', 'chromium'])
+            expect(mockRunRepository.getDistinctRunProjectTags).toHaveBeenCalledTimes(1)
+        })
+    })
+
+    describe('deleteProjectTag', () => {
+        it('should delete project data (attachments, notes, executions, runs)', async () => {
+            mockTestRepository.getExecutionIdsByProjectTag.mockResolvedValue(['exec-1', 'exec-2'])
+            mockTestRepository.getDistinctTestIdsByProjectTag.mockResolvedValue(['t1', 't2'])
+            mockAttachmentService.getStorageStats
+                .mockResolvedValueOnce({totalFiles: 10, totalSize: 3000, testDirectories: 1, typeBreakdown: {}})
+                .mockResolvedValueOnce({totalFiles: 6, totalSize: 1000, testDirectories: 1, typeBreakdown: {}})
+            mockTestRepository.deleteByIds.mockResolvedValue(2)
+            mockRunRepository.deleteRunsByProjectTag.mockResolvedValue(3)
+
+            const result = await testService.deleteProjectTag('slice-dice')
+
+            expect(mockTestRepository.getExecutionIdsByProjectTag).toHaveBeenCalledWith('slice-dice')
+            expect(mockTestRepository.getDistinctTestIdsByProjectTag).toHaveBeenCalledWith('slice-dice')
+            expect(mockAttachmentService.deleteAttachmentsForTestResult).toHaveBeenCalledTimes(2)
+            expect(mockNoteService.deleteNote).toHaveBeenCalledTimes(2)
+            expect(mockTestRepository.deleteByIds).toHaveBeenCalledWith(['exec-1', 'exec-2'])
+            expect(mockRunRepository.deleteRunsByProjectTag).toHaveBeenCalledWith('slice-dice')
+            expect(result).toEqual({
+                deletedRuns: 3,
+                deletedExecutions: 2,
+                deletedNotes: 2,
+                freedSpace: 2000,
+            })
+        })
+    })
+
+    describe('deleteTargetEnv', () => {
+        it('should delete target env data (attachments, notes, executions, runs)', async () => {
+            mockTestRepository.getExecutionIdsByTargetEnv.mockResolvedValue(['exec-1'])
+            mockTestRepository.getDistinctTestIdsByTargetEnv.mockResolvedValue(['t1'])
+            mockAttachmentService.getStorageStats
+                .mockResolvedValueOnce({totalFiles: 10, totalSize: 3000, testDirectories: 1, typeBreakdown: {}})
+                .mockResolvedValueOnce({totalFiles: 9, totalSize: 2500, testDirectories: 1, typeBreakdown: {}})
+            mockTestRepository.deleteByIds.mockResolvedValue(1)
+            mockRunRepository.deleteRunsByTargetEnv.mockResolvedValue(2)
+
+            const result = await testService.deleteTargetEnv('staging')
+
+            expect(mockTestRepository.getExecutionIdsByTargetEnv).toHaveBeenCalledWith('staging')
+            expect(mockTestRepository.getDistinctTestIdsByTargetEnv).toHaveBeenCalledWith('staging')
+            expect(mockAttachmentService.deleteAttachmentsForTestResult).toHaveBeenCalledTimes(1)
+            expect(mockNoteService.deleteNote).toHaveBeenCalledTimes(1)
+            expect(mockTestRepository.deleteByIds).toHaveBeenCalledWith(['exec-1'])
+            expect(mockRunRepository.deleteRunsByTargetEnv).toHaveBeenCalledWith('staging')
+            expect(result).toEqual({
+                deletedRuns: 2,
+                deletedExecutions: 1,
+                deletedNotes: 1,
+                freedSpace: 500,
+            })
         })
     })
 

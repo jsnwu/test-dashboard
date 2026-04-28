@@ -2,6 +2,8 @@
 
 Forked and customized from `shvydak/yshvydak-test-dashboard` for local workflows and repo-internal reporter development.
 
+![Dashboard screenshot](docs/images/dashboard.png)
+
 Key changes in this fork:
 
 - Add **Results tabs** to browse all runs, with drill-down into a single run’s tests
@@ -10,15 +12,11 @@ Key changes in this fork:
 - Add **target environment** configuration + filtering
 - Enchance test artifacts with video and trace viewer
 
-<img src="./docs/images/dashboard.png" alt="Dashboard screenshot" width="1200" />
-
 > 🎭 **Modern, full-stack dashboard for Playwright tests **
 
 A comprehensive testing dashboard that transforms your Playwright test experience with real-time monitoring, and beautiful reporting. Built for teams who value efficiency and visibility in their testing workflows.
 
 > **📦 Reporter is included in this repo**: `playwright-dashboard-reporter` lives in `packages/reporter` and is used by the dashboard and by Playwright runs from this project.
-
-<img src="./docs/images/dashboard.png" alt="Dashboard screenshot" width="1200" />
 
 ## ✨ Why This Dashboard?
 
@@ -48,6 +46,9 @@ A comprehensive testing dashboard that transforms your Playwright test experienc
 - Attachment viewing (screenshots, videos, traces) with persistent storage
 - **Settings modal** with centralized configuration (theme, admin actions)
 - **Theme system** with Auto/Light/Dark modes and localStorage persistence
+
+![Results screenshot](docs/images/results.png)
+![Result detail screenshot](docs/images/result-detail.png)
 
 ### ⚡ **Simple Reporter Integration**
 

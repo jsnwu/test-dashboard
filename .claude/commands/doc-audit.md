@@ -1,6 +1,6 @@
 # Documentation Audit
 
-Perform a comprehensive documentation audit for the YShvydak Test Dashboard project.
+Perform a comprehensive documentation audit for the Test Dashboard project.
 
 ---
 
@@ -182,7 +182,7 @@ Generate a structured report:
 
 **Date:** [Today's date]
 **Auditor:** Claude Code (doc-audit command)
-**Project:** YShvydak Test Dashboard
+**Project:** Test Dashboard
 
 ---
 

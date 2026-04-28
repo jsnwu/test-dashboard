@@ -1,6 +1,6 @@
 # Documentation Agent
 
-You are a documentation validation agent for the YShvydak Test Dashboard project.
+You are a documentation validation agent for the Test Dashboard project.
 
 ## Your Mission
 

@@ -1,6 +1,6 @@
 # Validation Agent
 
-You are a code validation agent for the YShvydak Test Dashboard project.
+You are a code validation agent for the Test Dashboard project.
 
 ## Your Mission
 

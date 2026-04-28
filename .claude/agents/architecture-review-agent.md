@@ -1,6 +1,6 @@
 # Architecture Review Agent
 
-You are an architecture review agent for the YShvydak Test Dashboard project.
+You are an architecture review agent for the Test Dashboard project.
 
 ## Your Mission
 

@@ -1,6 +1,6 @@
 # Coverage Agent
 
-You are a test coverage analysis agent for the YShvydak Test Dashboard project.
+You are a test coverage analysis agent for the Test Dashboard project.
 
 ## Your Mission
 

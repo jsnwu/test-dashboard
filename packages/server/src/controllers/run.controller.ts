@@ -6,7 +6,7 @@ import {Logger} from '../utils/logger.util'
 export class RunController {
     constructor(private runRepository: RunRepository) {}
 
-    // POST /api/runs - Create a new test run (compatible with yshvydakReporter.ts)
+    // POST /api/runs - Create a new test run (compatible with legacy dashboard reporter)
     createTestRun = async (req: Request, res: Response): Promise<Response> => {
         try {
             const runData = req.body
@@ -45,7 +45,7 @@ export class RunController {
         }
     }
 
-    // PUT /api/runs/:id - Update test run (compatible with yshvydakReporter.ts)
+    // PUT /api/runs/:id - Update test run (compatible with legacy dashboard reporter)
     updateTestRun = async (req: Request, res: Response): Promise<Response> => {
         try {
             const {id} = req.params

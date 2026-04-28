@@ -719,4 +719,4 @@ console.log('Running tests:', progress?.runningTests)
 ---
 
 **Last Updated:** October 28, 2025
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors

@@ -3,6 +3,9 @@
  *
  * This file runs before all tests in the server package.
  * Use it for global test setup, mocks, and environment configuration.
+ *
+ * Logging: Logger suppresses info/warn/error to console when NODE_ENV is "test"
+ * unless SERVER_VERBOSE_LOGS=1 (see logger.util.ts).
  */
 
 import {beforeAll, afterAll, afterEach} from 'vitest'

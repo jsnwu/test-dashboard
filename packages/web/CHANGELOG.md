@@ -1,4 +1,4 @@
-# @yshvydak/web
+# test-dashboard-web
 
 ## 1.8.0
 
@@ -9,7 +9,7 @@
 ### Patch Changes
 
 - Updated dependencies
-    - @yshvydak/core@1.8.0
+    - test-dashboard-core@1.8.0
 
 ## 1.7.4
 
@@ -17,7 +17,7 @@
 
 - fix: test notes attachments
 - Updated dependencies
-    - @yshvydak/core@1.7.4
+    - test-dashboard-core@1.7.4
 
 ## 1.7.3
 
@@ -25,7 +25,7 @@
 
 - mobile - fix scroll\
 - Updated dependencies
-    - @yshvydak/core@1.7.3
+    - test-dashboard-core@1.7.3
 
 ## 1.7.2
 
@@ -33,7 +33,7 @@
 
 - Mobile view support
 - Updated dependencies
-    - @yshvydak/core@1.7.2
+    - test-dashboard-core@1.7.2
 
 ## 1.7.1
 
@@ -41,7 +41,7 @@
 
 - feat: Add auto-discovery setting for run all test execution
 - Updated dependencies
-    - @yshvydak/core@1.7.1
+    - test-dashboard-core@1.7.1
 
 ## 1.7.0
 
@@ -52,7 +52,7 @@
 ### Patch Changes
 
 - Updated dependencies
-    - @yshvydak/core@1.7.0
+    - test-dashboard-core@1.7.0
 
 ## 1.6.0
 
@@ -63,7 +63,7 @@
 ### Patch Changes
 
 - Updated dependencies
-    - @yshvydak/core@1.6.0
+    - test-dashboard-core@1.6.0
 
 ## 1.5.0
 

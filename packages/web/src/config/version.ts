@@ -2,7 +2,7 @@ import packageJson from '../../package.json'
 
 export const VERSION = {
     web: packageJson.version,
-    githubRepo: 'https://github.com/shvydak/yshvydak-test-dashboard',
+    githubRepo: 'https://github.com/jsnwu/test-dashboard',
     get releaseUrl() {
         // Before release link to CHANGELOG
         // After release update to releases/tag/dashboard-v${this.web}

@@ -4,7 +4,7 @@ import {PlaywrightService} from '../services/playwright.service'
 import {WebSocketService} from '../services/websocket.service'
 import {AttachmentService} from '../services/attachment.service'
 
-// API Response types (compatible with yshvydakReporter.ts)
+// API Response types (compatible with legacy dashboard reporter)
 export interface ApiResponse<T = any> {
     success: boolean
     data?: T

@@ -286,33 +286,4 @@ describe('POST /api/tests/discovery - Test Discovery (Integration)', () => {
             expect(secondTestId).toBe(firstTestId)
         })
     })
-
-    describe('Public endpoint (Reporter integration)', () => {
-        it('should work without authentication (public endpoint)', async () => {
-            vi.spyOn(
-                server.serviceContainer.playwrightService as any,
-                'executePlaywrightListCommand'
-            ).mockResolvedValue(fixtures.playwrightListOutput)
-
-            // No Authorization header
-            const response = await request(server.app).post('/api/tests/discovery').expect(200)
-
-            expect(response.body.success).toBe(true)
-            expect(response.body.data.discovered).toBe(3)
-        })
-
-        it('should work with Authorization header (backward compatibility)', async () => {
-            vi.spyOn(
-                server.serviceContainer.playwrightService as any,
-                'executePlaywrightListCommand'
-            ).mockResolvedValue(fixtures.playwrightListOutput)
-
-            const response = await request(server.app)
-                .post('/api/tests/discovery')
-                .set('Authorization', `Bearer ${server.authToken}`)
-                .expect(200)
-
-            expect(response.body.success).toBe(true)
-        })
-    })
 })

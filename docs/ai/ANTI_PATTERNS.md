@@ -1,6 +1,6 @@
 # Common Anti-Patterns to Avoid
 
-This document contains detailed examples of common anti-patterns in the YShvydak Test Dashboard project, with wrong vs. right code examples.
+This document contains detailed examples of common anti-patterns in the Test Dashboard project, with wrong vs. right code examples.
 
 ## Overview
 
@@ -662,4 +662,4 @@ const App = () => {
 ---
 
 **Last Updated:** October 2025
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors

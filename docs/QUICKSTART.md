@@ -11,8 +11,8 @@ Get your Playwright Dashboard up and running in 5 minutes.
 
 ```bash
 # Clone repository
-git clone https://github.com/yshvydak/yshvydak-test-dashboard.git
-cd yshvydak-test-dashboard
+git clone https://github.com/jsnwu/test-dashboard.git
+cd test-dashboard
 
 # Install dependencies
 npm install
@@ -37,7 +37,7 @@ npm install --save-dev playwright-dashboard-reporter
 
 ```bash
 # Back to dashboard directory
-cd /path/to/yshvydak-test-dashboard
+cd /path/to/test-dashboard
 
 # Create .env file
 cp .env.example .env

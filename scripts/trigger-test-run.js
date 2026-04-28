@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * YShvydak Test Dashboard - Test Execution Trigger Script
+ * Test Dashboard - Test Execution Trigger Script
  *
  * This script triggers test execution via the dashboard API and is designed
  * to be called from external automation systems like n8n.
@@ -342,7 +342,7 @@ async function main() {
     // Show help if requested
     if (config.help) {
         console.log(`
-YShvydak Test Dashboard - Test Execution Trigger
+Test Dashboard - Test Execution Trigger
 
 Usage: node scripts/trigger-test-run.js [options]
 
@@ -375,7 +375,7 @@ Exit Codes:
         process.exit(0)
     }
 
-    log('=== YShvydak Test Dashboard - Test Trigger ===')
+    log('=== Test Dashboard - Test Trigger ===')
 
     // Load configuration
     const envConfig = loadEnvConfig()

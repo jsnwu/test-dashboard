@@ -14,12 +14,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/shvydak/yshvydak-test-dashboard.git",
+        "url": "git+https://github.com/jsnwu/test-dashboard.git",
         "directory": "packages/reporter"
     },
-    "homepage": "https://github.com/shvydak/yshvydak-test-dashboard#readme",
+    "homepage": "https://github.com/jsnwu/test-dashboard",
     "bugs": {
-        "url": "https://github.com/shvydak/yshvydak-test-dashboard/issues"
+        "url": "https://github.com/jsnwu/test-dashboard/issues"
     },
     "scripts": {
         "build": "tsup src/index.ts --format cjs,esm --dts --clean --external test-dashboard-core",

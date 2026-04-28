@@ -251,28 +251,28 @@ export function ResultsPage() {
                         </div>
                     ) : (
                         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-                            <table className="w-full text-sm min-w-[560px]">
+                            <table className="w-full table-fixed text-sm min-w-[560px]">
                                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/95 border-b border-gray-200 dark:border-gray-700 shadow-sm">
                                     <tr>
-                                        <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 min-w-0 w-[48%]">
                                             Name
                                         </th>
-                                        <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap w-[14%]">
                                             Time
                                         </th>
-                                        <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap w-[12%]">
                                             Duration
                                         </th>
-                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 w-[6.5%]">
                                             Total
                                         </th>
-                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 w-[6.5%]">
                                             Passed
                                         </th>
-                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 w-[6.5%]">
                                             Failed
                                         </th>
-                                        <th className="text-right py-3 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <th className="text-right py-3 px-2 text-xs font-medium text-gray-600 dark:text-gray-400 w-[6.5%]">
                                             Skipped
                                         </th>
                                     </tr>
@@ -304,7 +304,7 @@ export function ResultsPage() {
                                                         : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                                 }`}>
                                                 <td
-                                                    className={`py-2.5 px-3 max-w-[min(320px,40vw)] ${
+                                                    className={`py-2.5 px-3 min-w-0 ${
                                                         hasRunName
                                                             ? 'text-sm text-gray-900 dark:text-white'
                                                             : 'font-mono text-xs text-gray-600 dark:text-gray-400'
@@ -315,10 +315,17 @@ export function ResultsPage() {
                                                         {titleLabel}
                                                     </span>
                                                 </td>
-                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                <td
+                                                    className="min-w-0 py-2.5 px-2 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap truncate"
+                                                    title={formatRunDateTime(run.createdAt)}>
                                                     {formatRunDateTime(run.createdAt)}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                <td
+                                                    className="min-w-0 py-2.5 px-2 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap truncate"
+                                                    title={formatRunDurationMs(
+                                                        run.duration,
+                                                        run.status
+                                                    )}>
                                                     {formatRunDurationMs(run.duration, run.status)}
                                                 </td>
                                                 <td className="py-2.5 px-2 text-xs text-right text-gray-700 dark:text-gray-300 tabular-nums">
@@ -330,7 +337,7 @@ export function ResultsPage() {
                                                 <td className="py-2.5 px-2 text-xs text-right text-red-700 dark:text-red-400 tabular-nums">
                                                     {run.failedTests}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-xs text-right text-gray-600 dark:text-gray-400 tabular-nums">
+                                                <td className="py-2.5 px-2 text-xs text-right text-gray-600 dark:text-gray-400 tabular-nums">
                                                     {run.skippedTests}
                                                 </td>
                                             </tr>

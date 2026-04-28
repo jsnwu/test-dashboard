@@ -334,5 +334,5 @@ A: Yes. They're maintained alongside code and reflect actual architecture.
 ---
 
 **Last Updated:** October 2025
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors
 **Documentation Quality:** 9.5/10 - Optimized for AI-assisted development

@@ -1,4 +1,4 @@
--- YShvydak Test Dashboard Database Schema
+-- Test Dashboard Database Schema
 -- SQLite database for storing test runs, results, and attachments
 
 -- Test runs (top-level execution sessions)

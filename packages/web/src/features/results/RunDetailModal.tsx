@@ -1,4 +1,4 @@
-import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react'
+import {Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {useQueryClient} from '@tanstack/react-query'
 import type {TestResult, TestRun} from 'test-dashboard-core'
 import {Badge, Button, SearchInput} from '@shared/components'
@@ -16,6 +16,7 @@ import {FilterKey} from '@features/tests/constants'
 import {useTestGroups} from '@features/tests/hooks'
 import {useTestsStore} from '@features/tests/store/testsStore'
 import {parseTestNameTags} from '@features/tests/utils'
+import {formatDuration} from '@features/tests/utils/formatters'
 import {openAttachmentInNewWindow, openTraceViewer} from '@features/tests/utils/attachmentHelpers'
 import {formatRunDateTime, formatRunDurationMs, formatRunTitle} from './runFormatters'
 
@@ -71,6 +72,9 @@ function RunDetailModalTestRow({
                         : t.status}
             </td>
             <td className="py-2.5 px-3 text-sm text-gray-900 dark:text-white">{title}</td>
+            <td className="py-2.5 px-3 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap text-right tabular-nums">
+                {formatDuration(t.duration ?? 0)}
+            </td>
             <td className="py-2.5 px-3 text-xs text-gray-600 dark:text-gray-400">
                 {tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
@@ -152,13 +156,31 @@ export function RunDetailModal({
     const [collapsedGroupPaths, setCollapsedGroupPaths] = useState<ReadonlySet<string>>(
         () => new Set()
     )
+    const [durationSort, setDurationSort] = useState<'default' | 'asc' | 'desc'>('default')
     const skipOnlyDefaultAppliedRunIdRef = useRef<string | undefined>(undefined)
     const deleteRun = useTestsStore((s) => s.deleteRun)
     const queryClient = useQueryClient()
     const groupedTests = useTestGroups(filteredTests)
 
+    const sortedGroupedTests = useMemo(() => {
+        if (durationSort === 'default') return groupedTests
+        const mult = durationSort === 'asc' ? 1 : -1
+        return groupedTests.map((g) => ({
+            ...g,
+            tests: [...g.tests].sort((a, b) => {
+                const da = a.duration ?? 0
+                const db = b.duration ?? 0
+                if (da !== db) return (da - db) * mult
+                const nameCmp = (a.name || '').localeCompare(b.name || '')
+                if (nameCmp !== 0) return nameCmp
+                return a.id.localeCompare(b.id)
+            }),
+        }))
+    }, [groupedTests, durationSort])
+
     useEffect(() => {
         setShowDeleteConfirmation(false)
+        setDurationSort('default')
     }, [run?.id])
 
     useEffect(() => {
@@ -228,6 +250,12 @@ export function RunDetailModal({
             }
             return next
         })
+    }
+
+    const cycleDurationSort = () => {
+        setDurationSort((prev) =>
+            prev === 'default' ? 'desc' : prev === 'desc' ? 'asc' : 'default'
+        )
     }
 
     if (!isOpen) return null
@@ -387,6 +415,39 @@ export function RunDetailModal({
                                                 <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
                                                     Test
                                                 </th>
+                                                <th
+                                                    className="text-right py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-28"
+                                                    aria-sort={
+                                                        durationSort === 'asc'
+                                                            ? 'ascending'
+                                                            : durationSort === 'desc'
+                                                              ? 'descending'
+                                                              : 'none'
+                                                    }>
+                                                    <button
+                                                        type="button"
+                                                        onClick={cycleDurationSort}
+                                                        aria-label={`Sort tests by duration within each file. Current: ${
+                                                            durationSort === 'default'
+                                                                ? 'default order by name'
+                                                                : durationSort === 'desc'
+                                                                  ? 'slowest first'
+                                                                  : 'fastest first'
+                                                        }. Click to change.`}
+                                                        className="inline-flex w-full items-center justify-end gap-1 rounded px-1 py-0.5 -mx-1 -my-0.5 font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200/80 dark:hover:bg-gray-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                                                        title="Sort by duration within each file: slowest first, then fastest, then default order">
+                                                        Duration
+                                                        <span
+                                                            className="text-[10px] font-normal text-gray-500 dark:text-gray-400 tabular-nums"
+                                                            aria-hidden>
+                                                            {durationSort === 'default'
+                                                                ? '↕'
+                                                                : durationSort === 'desc'
+                                                                  ? '↓'
+                                                                  : '↑'}
+                                                        </span>
+                                                    </button>
+                                                </th>
                                                 <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-40">
                                                     Tags
                                                 </th>
@@ -399,7 +460,7 @@ export function RunDetailModal({
                                             {runTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={4}
+                                                        colSpan={5}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests in this run.
                                                     </td>
@@ -407,13 +468,13 @@ export function RunDetailModal({
                                             ) : filteredTests.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={4}
+                                                        colSpan={5}
                                                         className="py-8 px-3 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         No tests match this filter.
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                groupedTests.map((group) => {
+                                                sortedGroupedTests.map((group) => {
                                                     const expanded = !collapsedGroupPaths.has(
                                                         group.filePath
                                                     )
@@ -442,7 +503,7 @@ export function RunDetailModal({
                                                                     }
                                                                 }}>
                                                                 <td
-                                                                    colSpan={4}
+                                                                    colSpan={5}
                                                                     className="py-2.5 px-3 text-xs text-gray-800 dark:text-gray-200">
                                                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between min-w-0">
                                                                         <div className="flex items-center gap-2 min-w-0">

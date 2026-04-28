@@ -78,7 +78,7 @@ interface ConsoleEntry {
     timestamp: string
 }
 
-interface YShvydakTestResult {
+interface DashboardTestResult {
     id: string
     testId: string
     runId: string
@@ -105,7 +105,7 @@ interface YShvydakTestResult {
     }
 }
 
-interface YShvydakTestRun {
+interface DashboardTestRun {
     id: string
     runName?: string | null
     status: 'running' | 'completed' | 'failed'
@@ -137,9 +137,9 @@ interface ProcessEndData {
     } | null
 }
 
-class YShvydakReporter implements Reporter {
+class PlaywrightDashboardReporter implements Reporter {
     private runId: string
-    private results: YShvydakTestResult[] = []
+    private results: DashboardTestResult[] = []
     private startTime: number = 0
     private apiBaseUrl: string
     private readonly runName?: string
@@ -182,7 +182,7 @@ class YShvydakReporter implements Reporter {
             options.uploadTrace ??
             (legacyUploadAll ? true : process.env.DASHBOARD_UPLOAD_TRACE === 'true')
 
-        console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId})`)
+        console.log(`🎭 Playwright Dashboard Reporter initialized (Run ID: ${this.runId})`)
         console.log(`🌐 API Base URL: ${this.apiBaseUrl}`)
         if (this.runName) {
             console.log(`📝 Run name: ${this.runName}`)
@@ -280,7 +280,7 @@ class YShvydakReporter implements Reporter {
 
         const uploadables = this.getUploadableAttachments(result.attachments)
 
-        const testResult: YShvydakTestResult = {
+        const testResult: DashboardTestResult = {
             id: uuidv4(),
             testId,
             runId: this.runId,
@@ -347,14 +347,14 @@ class YShvydakReporter implements Reporter {
 
         // Trim by line count
         let truncated = false
-        while (entries.length > YShvydakReporter.MAX_CONSOLE_LINES) {
+        while (entries.length > PlaywrightDashboardReporter.MAX_CONSOLE_LINES) {
             entries.shift()
             truncated = true
         }
 
         // Trim by total size
         let totalChars = entries.reduce((acc, e) => acc + e.text.length, 0)
-        while (totalChars > YShvydakReporter.MAX_CONSOLE_CHARS && entries.length > 0) {
+        while (totalChars > PlaywrightDashboardReporter.MAX_CONSOLE_CHARS && entries.length > 0) {
             const removed = entries.shift()!
             totalChars -= removed.text.length
             truncated = true
@@ -649,7 +649,7 @@ class YShvydakReporter implements Reporter {
         }
     }
 
-    private async sendTestResult(result: YShvydakTestResult) {
+    private async sendTestResult(result: DashboardTestResult) {
         const startTime = Date.now()
         try {
             const response = await fetch(`${this.apiBaseUrl}/api/tests`, {
@@ -722,7 +722,7 @@ class YShvydakReporter implements Reporter {
         }
     }
 
-    private async updateTestRun(run: YShvydakTestRun) {
+    private async updateTestRun(run: DashboardTestRun) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/api/runs/${run.id}`, {
                 method: 'PUT',
@@ -834,4 +834,4 @@ class YShvydakReporter implements Reporter {
     }
 }
 
-export default YShvydakReporter
+export default PlaywrightDashboardReporter

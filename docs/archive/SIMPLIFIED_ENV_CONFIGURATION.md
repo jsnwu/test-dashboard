@@ -4,7 +4,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard uses a **simplified environment configuration system** that eliminates duplication and reduces setup complexity. Users only need to configure 5 core variables, while all other configuration values are automatically derived.
+The Test Dashboard uses a **simplified environment configuration system** that eliminates duplication and reduces setup complexity. Users only need to configure 5 core variables, while all other configuration values are automatically derived.
 
 ## Core Concept
 

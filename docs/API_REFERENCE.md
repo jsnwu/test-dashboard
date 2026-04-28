@@ -7,7 +7,7 @@ All API endpoints return consistent `ApiResponse<T>` format with proper error ha
 ## Base URL
 
 - **Development**: `http://localhost:3001/api`
-- **Production**: `https://api-dashboard.shvydak.com/api`
+- **Production**: `https://api-dashboard.example.com/api`
 
 ## Health & Diagnostics
 
@@ -47,7 +47,7 @@ Complete integration status and configuration validation.
         },
         "reporter": {
             "type": "file",
-            "path": "/path/to/yshvydakReporter.ts"
+            "path": "/path/to/legacyDashboardReporter.ts"
         }
     }
 }
@@ -1556,7 +1556,7 @@ Emergency endpoint to clear all active processes.
 
 ## WebSocket Events
 
-Connect to WebSocket at: `ws://localhost:3001/ws` (development) or `wss://api-dashboard.shvydak.com/ws` (production)
+Connect to WebSocket at: `ws://localhost:3001/ws` (development) or `wss://api-dashboard.example.com/ws` (production)
 
 ### Connection Events
 

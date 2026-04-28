@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a **centralized Settings modal** that consolidates dashboard configuration and common administrative actions. This feature provides a unified interface for managing theme preferences and performing system operations, replacing the previous Dashboard-specific action panel.
+The Test Dashboard implements a **centralized Settings modal** that consolidates dashboard configuration and common administrative actions. This feature provides a unified interface for managing theme preferences and performing system operations, replacing the previous Dashboard-specific action panel.
 
 ### Core Principle
 

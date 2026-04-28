@@ -2,14 +2,14 @@
 
 ## Overview
 
-YShvydak Test Dashboard follows a clean **Layered Architecture** pattern with clear separation of concerns across all components.
+Test Dashboard follows a clean **Layered Architecture** pattern with clear separation of concerns across all components.
 
 ## Monorepo Structure
 
 ```
 packages/
 ├── core/      # Shared TypeScript types & interfaces
-├── reporter/  # @yshvydak/playwright-reporter npm package
+├── reporter/  # playwright-reporter npm package
 ├── server/    # Express API + SQLite + WebSocket server (LAYERED ARCHITECTURE)
 └── web/       # React + Vite dashboard UI
 ```
@@ -68,7 +68,7 @@ The server follows a clean **Layered Architecture** with clear separation of con
 
 ## API Compatibility
 
-- **100% backward compatible** with existing `yshvydakReporter.ts`
+- **100% backward compatible** with existing `legacyDashboardReporter.ts`
 - All endpoints (`/api/tests`, `/api/runs`) maintain identical request/response formats
 - WebSocket events preserved for real-time updates
 - Database schema supports both old and new status values
@@ -89,11 +89,11 @@ The dashboard uses a **dynamic reporter injection** architecture that provides c
 ### How It Works
 
 1. **No Config Changes**: Test projects keep their standard `playwright.config.ts` unchanged
-2. **Dynamic Injection**: Dashboard adds reporter via command line when running tests: `--reporter=@yshvydak/playwright-reporter`
+2. **Dynamic Injection**: Dashboard adds reporter via command line when running tests: `--reporter=playwright-dashboard-reporter`
 3. **Environment Detection**: Reporter activates only when `DASHBOARD_API_URL` is set
 4. **Fallback Support**: Supports both npm package and local file fallback
 
-### Reporter Package (@yshvydak/playwright-reporter)
+### Reporter Package (`playwright-dashboard-reporter`)
 
 - **Location**: `packages/reporter/` - Standalone npm package
 - **Exports**: CJS/ESM builds with TypeScript declarations

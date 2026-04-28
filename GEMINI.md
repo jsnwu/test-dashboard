@@ -282,4 +282,4 @@ cd packages/reporter && npm run dev   # Reporter watch
 
 **Total:** ~150 lines | **Read time:** 2-3 minutes
 **For detailed examples:** See [docs/ai/](docs/ai/)
-**Last Updated:** October 2025 | **Maintained by:** Yurii Shvydak
+**Last Updated:** October 2025 | **Maintained by:** test-dashboard contributors

@@ -1,7 +1,7 @@
 {
     "name": "test-dashboard-server",
     "version": "1.8.0",
-    "description": "Backend server for yshvydak-test-dashboard",
+    "description": "Backend server for test-dashboard",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc && npm run copy-files",

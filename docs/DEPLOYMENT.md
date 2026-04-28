@@ -7,8 +7,8 @@ For deploying the dashboard over the internet using cloudtunnel and custom domai
 ## Setup Requirements
 
 1. **CloudTunnel Configuration**
-    - Configure cloudtunnel for port 3001 (API server) to a subdomain like `api-dashboard.shvydak.com`
-    - Configure cloudtunnel for port 3000 (web) to your main domain like `test-dashboard.shvydak.com`
+    - Configure cloudtunnel for port 3001 (API server) to a subdomain like `api-dashboard.example.com`
+    - Configure cloudtunnel for port 3000 (web) to your main domain like `test-dashboard.example.com`
 
 2. **Environment Configuration**
     - For **local development**: Use `.env` (localhost URLs)
@@ -19,8 +19,8 @@ For deploying the dashboard over the internet using cloudtunnel and custom domai
 ### 1. Setup CloudTunnel for API Server
 
 ```bash
-# Configure cloudtunnel to expose port 3001 as api-dashboard.shvydak.com
-cloudtunnel config add api-server 3001 api-dashboard.shvydak.com
+# Configure cloudtunnel to expose port 3001 as api-dashboard.example.com
+cloudtunnel config add api-server 3001 api-dashboard.example.com
 ```
 
 ### 2. Update Environment Configuration
@@ -30,8 +30,8 @@ cloudtunnel config add api-server 3001 api-dashboard.shvydak.com
 cp .env.production .env
 
 # Edit .env and replace with your actual cloudtunnel domains:
-# BASE_URL=https://api-dashboard.shvydak.com
-# VITE_BASE_URL=https://api-dashboard.shvydak.com
+# BASE_URL=https://api-dashboard.example.com
+# VITE_BASE_URL=https://api-dashboard.example.com
 ```
 
 ### 3. Start Services
@@ -46,8 +46,8 @@ npm run dev:prod
 
 ## Key Architecture Notes
 
-- **Web Client**: Served from `test-dashboard.shvydak.com` (port 3000 via cloudtunnel)
-- **API Server**: Accessible at `api-dashboard.shvydak.com` (port 3001 via cloudtunnel)
+- **Web Client**: Served from `test-dashboard.example.com` (port 3000 via cloudtunnel)
+- **API Server**: Accessible at `api-dashboard.example.com` (port 3001 via cloudtunnel)
 - **WebSocket**: Uses same API domain with `wss://` protocol
 - **Environment**: All URL derivation handled automatically through configuration
 
@@ -62,7 +62,7 @@ npm run dev:prod
 | Environment | Web URL                    | API URL                   | Configuration              |
 | ----------- | -------------------------- | ------------------------- | -------------------------- |
 | Development | localhost:3000             | localhost:3001            | `.env`                     |
-| Production  | test-dashboard.shvydak.com | api-dashboard.shvydak.com | `.env.production` → `.env` |
+| Production  | test-dashboard.example.com | api-dashboard.example.com | `.env.production` → `.env` |
 
 ## Environment Files
 
@@ -81,8 +81,8 @@ PLAYWRIGHT_PROJECT_DIR=/path/to/your/playwright/project
 ```bash
 PORT=3001
 NODE_ENV=production
-BASE_URL=https://api-dashboard.shvydak.com
-VITE_BASE_URL=https://api-dashboard.shvydak.com
+BASE_URL=https://api-dashboard.example.com
+VITE_BASE_URL=https://api-dashboard.example.com
 PLAYWRIGHT_PROJECT_DIR=/path/to/your/playwright/project
 ```
 

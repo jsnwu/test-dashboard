@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a **permanent attachment storage system** that ensures test artifacts (videos, screenshots, traces, logs) remain accessible across multiple test runs. This system solves the critical problem of Playwright cleaning its temporary `test-results/` directory between test executions, which previously caused attachments to disappear.
+The Test Dashboard implements a **permanent attachment storage system** that ensures test artifacts (videos, screenshots, traces, logs) remain accessible across multiple test runs. This system solves the critical problem of Playwright cleaning its temporary `test-results/` directory between test executions, which previously caused attachments to disappear.
 
 ### Core Principle
 
@@ -265,7 +265,7 @@ Attachments saved to: {PLAYWRIGHT_PROJECT}/test-results/{test-name}-{hash}/
 #### 2. Reporter Sends Data to Dashboard
 
 ```typescript
-// External reporter (yshvydakReporter.ts)
+// External reporter (legacyDashboardReporter.ts)
 const result = {
     testId: 'test-66jqtq',
     name: 'API - Change Action Status',

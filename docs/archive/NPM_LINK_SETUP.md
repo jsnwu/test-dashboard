@@ -10,14 +10,14 @@ Reporter is installed as a regular npm package instead of npm link, and code cha
 
 ```bash
 # In the test project
-cd /Users/y.shvydak/QA/probuild-qa
+cd /path/to/probuild-qa
 npm ls playwright-dashboard-reporter
 ```
 
 **Correct output (npm link working):**
 
 ```
-playwright-dashboard-reporter@1.0.3 extraneous -> ./../../Projects/yshvydak-test-dashboard/packages/reporter
+playwright-dashboard-reporter@1.0.3 extraneous -> ./../../Projects/test-dashboard/packages/reporter
 ```
 
 **Incorrect output (installed as package):**
@@ -29,13 +29,13 @@ playwright-dashboard-reporter@1.0.3
 ### 2. Check Symlink
 
 ```bash
-readlink /Users/y.shvydak/QA/probuild-qa/node_modules/playwright-dashboard-reporter
+readlink /path/to/probuild-qa/node_modules/playwright-dashboard-reporter
 ```
 
 **Correct output:**
 
 ```
-../../../Projects/yshvydak-test-dashboard/packages/reporter
+../../../Projects/test-dashboard/packages/reporter
 ```
 
 **Incorrect output:**
@@ -49,35 +49,35 @@ readlink /Users/y.shvydak/QA/probuild-qa/node_modules/playwright-dashboard-repor
 ### Step 1: Remove npm package from test project
 
 ```bash
-cd /Users/y.shvydak/QA/probuild-qa
+cd /path/to/probuild-qa
 npm uninstall playwright-dashboard-reporter
 ```
 
 ### Step 2: Create global npm link for reporter
 
 ```bash
-cd /Users/y.shvydak/Projects/yshvydak-test-dashboard/packages/reporter
+cd /path/to/test-dashboard/packages/reporter
 npm link
 ```
 
 ### Step 3: Link reporter to test project
 
 ```bash
-cd /Users/y.shvydak/QA/probuild-qa
+cd /path/to/probuild-qa
 npm link playwright-dashboard-reporter
 ```
 
 ### Step 4: Verify link is created
 
 ```bash
-readlink /Users/y.shvydak/QA/probuild-qa/node_modules/playwright-dashboard-reporter
-# Should output: ../../../Projects/yshvydak-test-dashboard/packages/reporter
+readlink /path/to/probuild-qa/node_modules/playwright-dashboard-reporter
+# Should output: ../../../Projects/test-dashboard/packages/reporter
 ```
 
 ### Step 5: Start dev mode
 
 ```bash
-cd /Users/y.shvydak/Projects/yshvydak-test-dashboard
+cd /path/to/test-dashboard
 npm run dev
 ```
 
@@ -91,7 +91,7 @@ This will start watch mode for the reporter, which automatically rebuilds code o
 
 ```typescript
 // packages/reporter/src/index.ts:97
-console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId}) [TEST MARKER]`)
+console.log(`🎭 Playwright Dashboard Reporter initialized (Run ID: ${this.runId}) [TEST MARKER]`)
 ```
 
 2. Watch mode will automatically rebuild (you'll see "Build success" in the terminal)
@@ -99,7 +99,7 @@ console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId}
 3. Run a single test:
 
 ```bash
-cd /Users/y.shvydak/QA/probuild-qa
+cd /path/to/probuild-qa
 npx playwright test e2e/tests/authentication/login.test.ts --grep "Successful Login$" --reporter=playwright-dashboard-reporter
 ```
 
@@ -111,10 +111,10 @@ npx playwright test e2e/tests/authentication/login.test.ts --grep "Successful Lo
 
 ### ⚠️ Two Projects
 
-- **Dashboard project**: `/Users/y.shvydak/Projects/yshvydak-test-dashboard`
+- **Dashboard project**: `/path/to/test-dashboard`
     - This is where the reporter is developed (`packages/reporter/`)
 
-- **Test project**: `/Users/y.shvydak/QA/probuild-qa`
+- **Test project**: `/path/to/probuild-qa`
     - This is where Playwright tests run
     - Must have npm link to the reporter
 
@@ -140,7 +140,7 @@ npm link can break after:
 
 ```bash
 # Check the built file content
-cat /Users/y.shvydak/QA/probuild-qa/node_modules/playwright-dashboard-reporter/dist/index.js | grep "YShvydak Dashboard Reporter"
+cat /path/to/probuild-qa/node_modules/playwright-dashboard-reporter/dist/index.js | grep "Playwright Dashboard Reporter"
 ```
 
 This file should update when source code changes.
@@ -158,10 +158,10 @@ This file should update when source code changes.
 
 ```bash
 # Recreate npm link
-cd /Users/y.shvydak/Projects/yshvydak-test-dashboard/packages/reporter
+cd /path/to/test-dashboard/packages/reporter
 npm link
 
-cd /Users/y.shvydak/QA/probuild-qa
+cd /path/to/probuild-qa
 npm link playwright-dashboard-reporter
 ```
 
@@ -172,4 +172,4 @@ This is not related to npm link - it's a dashboard database issue. Start the das
 ---
 
 **Last Updated:** 2025-11-19
-**Author:** Yurii Shvydak
+**Author:** test-dashboard contributors

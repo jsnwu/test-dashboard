@@ -28,7 +28,7 @@ npm run build        # Build TypeScript types
 npm run dev          # Watch mode
 ```
 
-**Reporter Package (@yshvydak/playwright-reporter):**
+**Reporter Package (`playwright-dashboard-reporter`):**
 
 ```bash
 cd packages/reporter
@@ -183,7 +183,7 @@ import { formatDuration, getStatusIcon } from '@features/tests/utils'
 
 1. **Constants**: `features/{feature}/constants/` for enums, status icons, filter options
 2. **Types**: `features/{feature}/types/` for TypeScript interfaces specific to feature
-3. **Shared types**: Use `@yshvydak/core` for cross-package types
+3. **Shared types**: Use `test-dashboard-core` for cross-package types
 
 ## Working with Services
 
@@ -384,7 +384,7 @@ This ensures production logs are clean and focused on important events, making i
 
 ### For Existing Playwright Projects
 
-1. Install `@yshvydak/core` package
+1. Install `test-dashboard-core` package
 2. Copy the reporter file to project's test utilities
 3. Set `DASHBOARD_API_URL` environment variable if needed
 4. Start dashboard server before running tests
@@ -522,8 +522,8 @@ npm run test:coverage    # Generate coverage report
 **Specific package:**
 
 ```bash
-npm test --workspace=@yshvydak/test-dashboard-server   # Server
-npm test --workspace=@yshvydak/web                     # Web
+npm test --workspace=test-dashboard-server   # Server
+npm test --workspace=test-dashboard-web      # Web
 npm test --workspace=playwright-dashboard-reporter     # Reporter
 ```
 

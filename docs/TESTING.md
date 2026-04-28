@@ -22,10 +22,10 @@ Per-package focus (workspace):
 
 ```bash
 # Server (Node environment)
-npm test --workspace=@yshvydak/test-dashboard-server
+npm test --workspace=test-dashboard-server
 
 # Web (jsdom + React Testing Library)
-npm test --workspace=@yshvydak/web
+npm test --workspace=test-dashboard-web
 
 # Reporter (critical ID generation logic)
 npm test --workspace=playwright-dashboard-reporter

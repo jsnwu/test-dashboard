@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements **proper timestamp tracking** to ensure accurate test execution history and UI updates. This document describes the architecture and implementation details of timestamp management.
+The Test Dashboard implements **proper timestamp tracking** to ensure accurate test execution history and UI updates. This document describes the architecture and implementation details of timestamp management.
 
 ## Problem Statement
 

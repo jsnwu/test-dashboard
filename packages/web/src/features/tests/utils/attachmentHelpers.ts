@@ -84,6 +84,7 @@ export async function openTraceViewer(
 
         const tracePath = `/api/tests/traces/${attachment.id}?token=${encodeURIComponent(token)}`
         const traceURL = buildAttachmentUrl(config.api.serverUrl, tracePath)
+
         window.open(`https://trace.playwright.dev/?trace=${encodeURIComponent(traceURL)}`, '_blank')
     } catch (error) {
         console.error('Failed to open trace viewer:', error)

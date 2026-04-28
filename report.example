@@ -13,7 +13,7 @@ import {v4 as uuidv4} from 'uuid'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-interface YShvydakTestResult {
+interface DashboardTestResult {
     id: string
     testId: string
     runId: string
@@ -31,7 +31,7 @@ interface YShvydakTestResult {
     }>
 }
 
-interface YShvydakTestRun {
+interface DashboardTestRun {
     id: string
     status: 'running' | 'completed' | 'failed'
     timestamp: string
@@ -62,9 +62,9 @@ interface ProcessEndData {
     } | null
 }
 
-class YShvydakReporter implements Reporter {
+class PlaywrightDashboardReporter implements Reporter {
     private runId: string = uuidv4()
-    private results: YShvydakTestResult[] = []
+    private results: DashboardTestResult[] = []
     private startTime: number = 0
     private apiBaseUrl: string
 
@@ -79,7 +79,7 @@ class YShvydakReporter implements Reporter {
 
         this.apiBaseUrl = baseUrl
 
-        console.log(`🎭 YShvydak Dashboard Reporter initialized (Run ID: ${this.runId})`)
+        console.log(`🎭 Playwright Dashboard Reporter initialized (Run ID: ${this.runId})`)
         console.log(`🌐 API Base URL: ${this.apiBaseUrl}`)
 
         if (!this.apiBaseUrl || this.apiBaseUrl === 'undefined') {
@@ -128,7 +128,7 @@ class YShvydakReporter implements Reporter {
             enhancedErrorMessage = this.createEnhancedErrorMessage(test, result.error)
         }
 
-        const testResult: YShvydakTestResult = {
+        const testResult: DashboardTestResult = {
             id: uuidv4(),
             testId,
             runId: this.runId,
@@ -331,7 +331,7 @@ class YShvydakReporter implements Reporter {
         }
     }
 
-    private async sendTestResult(result: YShvydakTestResult) {
+    private async sendTestResult(result: DashboardTestResult) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/api/tests`, {
                 method: 'POST',
@@ -349,7 +349,7 @@ class YShvydakReporter implements Reporter {
         }
     }
 
-    private async createTestRun(run: YShvydakTestRun) {
+    private async createTestRun(run: DashboardTestRun) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/api/runs`, {
                 method: 'POST',
@@ -367,7 +367,7 @@ class YShvydakReporter implements Reporter {
         }
     }
 
-    private async updateTestRun(run: YShvydakTestRun) {
+    private async updateTestRun(run: DashboardTestRun) {
         try {
             const response = await fetch(`${this.apiBaseUrl}/api/runs/${run.id}`, {
                 method: 'PUT',
@@ -455,4 +455,4 @@ class YShvydakReporter implements Reporter {
     }
 }
 
-export default YShvydakReporter
+export default PlaywrightDashboardReporter

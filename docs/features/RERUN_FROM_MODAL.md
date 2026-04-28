@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a **rerun test from modal window** feature that allows users to quickly rerun a test directly from the TestDetailModal without navigating away. The feature provides real-time updates via WebSocket integration and automatically displays the latest execution results.
+The Test Dashboard implements a **rerun test from modal window** feature that allows users to quickly rerun a test directly from the TestDetailModal without navigating away. The feature provides real-time updates via WebSocket integration and automatically displays the latest execution results.
 
 ### Core Principle
 

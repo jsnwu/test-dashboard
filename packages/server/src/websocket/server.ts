@@ -67,7 +67,7 @@ export class WebSocketManager {
                 type: 'connection',
                 data: {
                     clientId,
-                    message: 'Connected to YShvydak Test Dashboard',
+                    message: 'Connected to Test Dashboard',
                 },
             })
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a simplified JWT-based authentication system that protects the web interface while keeping API endpoints open for reporter integration. This provides security for users while maintaining simplicity for test execution.
+The Test Dashboard implements a simplified JWT-based authentication system that protects the web interface while keeping API endpoints open for reporter integration. This provides security for users while maintaining simplicity for test execution.
 
 ## Architecture
 
@@ -341,8 +341,8 @@ Update your `.env.production`:
 # Existing production config...
 PORT=3001
 NODE_ENV=production
-BASE_URL=https://api-dashboard.shvydak.com
-VITE_BASE_URL=https://api-dashboard.shvydak.com
+BASE_URL=https://api-dashboard.example.com
+VITE_BASE_URL=https://api-dashboard.example.com
 
 # Add authentication config
 ADMIN_EMAIL=your-admin@email.com
@@ -539,7 +539,7 @@ Users must be authenticated to access:
 
 ### External Reporter Compatibility
 
-The external reporter at `/Users/y.shvydak/QA/probuild-qa/e2e/testUtils/yshvydakReporter.ts` requires minimal changes:
+The external reporter at `/path/to/your/project/e2e/testUtils/legacyDashboardReporter.ts` requires minimal changes:
 
 **Simple API requests:**
 
@@ -558,7 +558,7 @@ const response = await fetch(`${this.apiBaseUrl}/api/tests`, {
 In your test project's `.env`:
 
 ```bash
-DASHBOARD_API_URL=https://api-dashboard.shvydak.com
+DASHBOARD_API_URL=https://api-dashboard.example.com
 ```
 
 ## Deployment Guide
@@ -603,9 +603,9 @@ DASHBOARD_API_URL=https://api-dashboard.shvydak.com
     ```
 
 3. **CloudTunnel configuration:**
-    - API server (port 3001): `https://api-dashboard.shvydak.com`
-    - Web client (port 3000): `https://test-dashboard.shvydak.com`
-    - WebSocket: `wss://api-dashboard.shvydak.com/ws`
+    - API server (port 3001): `https://api-dashboard.example.com`
+    - Web client (port 3000): `https://test-dashboard.example.com`
+    - WebSocket: `wss://api-dashboard.example.com/ws`
 
 ## Security Best Practices
 

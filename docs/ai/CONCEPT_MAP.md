@@ -484,4 +484,4 @@ With stable testId:
 ---
 
 **Last Updated:** October 2025
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors

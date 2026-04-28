@@ -7,6 +7,14 @@ export class Logger {
         return process.env.NODE_ENV === 'development'
     }
 
+    /**
+     * During Vitest runs NODE_ENV is "test". Suppress noisy console output unless
+     * SERVER_VERBOSE_LOGS=1 (see packages/server/vitest.setup.ts).
+     */
+    private static isQuietTestLogs(): boolean {
+        return process.env.NODE_ENV === 'test' && process.env.SERVER_VERBOSE_LOGS !== '1'
+    }
+
     private static formatMessage(level: string, message: string, ...args: any[]): string {
         const timestamp = new Date().toISOString()
         const emoji = this.getEmoji(level)
@@ -35,6 +43,7 @@ export class Logger {
      * Use for: server startup, important state changes, critical operations
      */
     static info(message: string, ...args: any[]): void {
+        if (this.isQuietTestLogs()) return
         // In production, only log if it's a critical operation
         // In development, log everything
         if (this.isDevelopment() || !this.isProduction()) {
@@ -55,6 +64,7 @@ export class Logger {
      * Use for: potential issues, deprecated features, security warnings
      */
     static warn(message: string, ...args: any[]): void {
+        if (this.isQuietTestLogs()) return
         console.warn(this.formatMessage('warn', message, ...args))
     }
 
@@ -63,6 +73,7 @@ export class Logger {
      * Use for: errors, exceptions, failures
      */
     static error(message: string, error?: any): void {
+        if (this.isQuietTestLogs()) return
         console.error(this.formatMessage('error', message))
         if (error) {
             console.error(error)
@@ -108,7 +119,7 @@ export class Logger {
 
     static serverStart(port: number): void {
         // Server startup is critical - always log
-        this.critical('🚀 YShvydak Test Dashboard Server running on port', port)
+        this.critical('🚀 Test Dashboard Server running on port', port)
         this.critical(`📊 Health check: http://localhost:${port}/api/health`)
     }
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################################################
-# YShvydak Test Dashboard - Test Execution Trigger (Bash Wrapper)
+# Test Dashboard - Test Execution Trigger (Bash Wrapper)
 #
 # This is a convenience wrapper around trigger-test-run.js that provides
 # a simpler command-line interface.

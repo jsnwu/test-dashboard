@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a **comprehensive test execution history tracking system** that preserves all test runs and their associated data (attachments, results, metadata) across multiple executions. This feature enables users to view, compare, and analyze historical test runs without losing data when tests are rerun.
+The Test Dashboard implements a **comprehensive test execution history tracking system** that preserves all test runs and their associated data (attachments, results, metadata) across multiple executions. This feature enables users to view, compare, and analyze historical test runs without losing data when tests are rerun.
 
 ### Core Principle
 
@@ -604,10 +604,10 @@ CREATE INDEX IF NOT EXISTS idx_attachments_test_result_id ON attachments(test_re
 The reporter already generates unique execution IDs, so no changes were needed:
 
 ```typescript
-// External reporter: /Users/y.shvydak/QA/probuild-qa/e2e/testUtils/yshvydakReporter.ts
+// External reporter: /path/to/your/project/e2e/testUtils/legacyDashboardReporter.ts
 
 onTestEnd(test: TestCase, result: TestResult) {
-    const testResult: YShvydakTestResult = {
+    const testResult = {
         id: uuidv4(),  // ✅ Unique execution ID - different every time
         testId: this.generateStableTestId(test),  // ✅ Same for all runs of this test
         runId: this.runId,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard implements a **comprehensive Dashboard redesign** featuring flaky tests detection, test execution timeline visualization, and real-time WebSocket updates. This feature replaces the previous dashboard components (ErrorsOverview, RecentTests, SystemInfo) with a modern, data-driven analytics interface.
+The Test Dashboard implements a **comprehensive Dashboard redesign** featuring flaky tests detection, test execution timeline visualization, and real-time WebSocket updates. This feature replaces the previous dashboard components (ErrorsOverview, RecentTests, SystemInfo) with a modern, data-driven analytics interface.
 
 ### Core Principle
 

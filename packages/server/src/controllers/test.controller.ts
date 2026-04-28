@@ -311,7 +311,7 @@ export class TestController {
         }
     }
 
-    // POST /api/tests - Create a new test result (compatible with yshvydakReporter.ts)
+    // POST /api/tests - Create a new test result (compatible with legacy dashboard reporter)
     createTestResult = async (req: ServiceRequest, res: Response): Promise<Response> => {
         try {
             const testData = req.body

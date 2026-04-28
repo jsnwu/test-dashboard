@@ -570,4 +570,4 @@ describe('deleteExecution', () => {
 
 **Last Updated:** November 2024
 **Author:** AI Assistant (Claude Code)
-**Reviewer:** Yurii Shvydak
+**Reviewer:** test-dashboard contributors

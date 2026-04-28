@@ -29,8 +29,8 @@ Add `project_id` column to tables:
 
 ```json
 {
-    "probuild-qa": "/Users/y.shvydak/QA/probuild-qa",
-    "funzy-qa": "/Users/y.shvydak/QA/funzy-qa"
+    "probuild-qa": "/path/to/probuild-qa",
+    "funzy-qa": "/path/to/funzy-qa"
 }
 ```
 

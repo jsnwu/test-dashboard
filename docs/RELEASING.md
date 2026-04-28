@@ -15,9 +15,9 @@ git checkout -b feature/your-feature-name
 # 3. Create changeset (ONLY if code changes require version update)
 npm run changeset
 # Select packages:
-#   [x] @yshvydak/server     ← ALWAYS together for Dashboard
-#   [x] @yshvydak/web        ← ALWAYS together for Dashboard
-#   [x] @yshvydak/core       ← ALWAYS together for Dashboard
+#   [x] test-dashboard-server     ← ALWAYS together for Dashboard
+#   [x] test-dashboard-web        ← ALWAYS together for Dashboard
+#   [x] test-dashboard-core       ← ALWAYS together for Dashboard
 #   [ ] playwright-dashboard-reporter  ← Only if reporter changed
 # Select type: major/minor/patch (same type for all Dashboard packages)
 # Write summary: First line short, then detailed changes
@@ -42,9 +42,9 @@ cat packages/core/package.json | grep version
 git add .
 git commit -m "chore: release v1.4.0
 
-- @yshvydak/server@1.4.0
-- @yshvydak/web@1.4.0
-- @yshvydak/core@1.4.0"
+- test-dashboard-server@1.4.0
+- test-dashboard-web@1.4.0
+- test-dashboard-core@1.4.0"
 
 # 9. Create tags
 git tag dashboard-v1.4.0 -m "Dashboard release 1.4.0"
@@ -216,7 +216,7 @@ A: Use version from `packages/server/package.json` after `npm run version`.
 **Q: What does `npm run version` do?**  
 A: Updates `package.json` versions, updates `CHANGELOG.md`, deletes changeset files.
 
-**Q: Warning about @yshvydak/core "file:../core"?**  
+**Q: Warning about test-dashboard-core "file:../core"?**
 A: Normal for monorepo. Ignore it.
 
 ---

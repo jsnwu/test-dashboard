@@ -1,6 +1,6 @@
 # playwright-dashboard-reporter
 
-Official Playwright reporter for [YShvydak Test Dashboard](https://github.com/shvydak/yshvydak-test-dashboard) - a full-stack testing dashboard with real-time monitoring, one-click reruns, and comprehensive test reporting.
+Official Playwright reporter for [Test Dashboard](https://github.com/jsnwu/test-dashboard) - a full-stack testing dashboard with real-time monitoring, one-click reruns, and comprehensive test reporting.
 
 ## Features
 
@@ -33,8 +33,8 @@ DASHBOARD_API_URL=http://localhost:3001
 
 ```bash
 # Clone dashboard repository
-git clone https://github.com/shvydak/yshvydak-test-dashboard.git
-cd yshvydak-test-dashboard
+git clone https://github.com/jsnwu/test-dashboard.git
+cd test-dashboard
 
 # Install and start
 npm install
@@ -177,7 +177,7 @@ This reporter is compatible with:
 - Improved error handling for network failures
 
 **Documentation:**
-- Added [Progress Tracking Guide](https://github.com/shvydak/yshvydak-test-dashboard/blob/main/docs/features/PROGRESS_TRACKING.md)
+- Added [Progress Tracking Guide](https://github.com/jsnwu/test-dashboard/blob/main/docs/features/PROGRESS_TRACKING.md)
 - Updated API documentation
 
 ### v1.0.0 (September 2025)
@@ -202,13 +202,13 @@ npm run type-check # TypeScript validation
 
 ## Support
 
-- 📚 [Documentation](https://github.com/shvydak/yshvydak-test-dashboard/tree/main/docs)
-- 🐛 [Report Issues](https://github.com/shvydak/yshvydak-test-dashboard/issues)
-- 💬 [Discussions](https://github.com/shvydak/yshvydak-test-dashboard/discussions)
+- 📚 [Documentation](https://github.com/jsnwu/test-dashboard/tree/main/docs)
+- 🐛 [Report Issues](https://github.com/jsnwu/test-dashboard/issues)
+- 💬 [Discussions](https://github.com/jsnwu/test-dashboard/discussions)
 
 ## License
 
-MIT © YShvydak
+MIT © test-dashboard contributors
 
 ---
 

@@ -2,7 +2,7 @@
     "name": "test-dashboard-web",
     "version": "1.8.0",
     "type": "module",
-    "description": "Frontend web application for yshvydak-test-dashboard",
+    "description": "Frontend web application for test-dashboard",
     "main": "dist/index.js",
     "scripts": {
         "dev": "vite",

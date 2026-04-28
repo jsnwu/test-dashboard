@@ -2,7 +2,7 @@
 
 ## Overview
 
-The YShvydak Test Dashboard uses **[`playwright-dashboard-reporter`](https://www.npmjs.com/package/playwright-dashboard-reporter)** - a professional npm package that sends Playwright test results to the Dashboard in real-time.
+The Test Dashboard uses **[`playwright-dashboard-reporter`](https://www.npmjs.com/package/playwright-dashboard-reporter)** - a professional npm package that sends Playwright test results to the Dashboard in real-time.
 
 📦 **npm Package**: [`playwright-dashboard-reporter@1.0.1`](https://www.npmjs.com/package/playwright-dashboard-reporter)
 🏗️ **Source Code**: [`packages/reporter/src/index.ts`](../packages/reporter/src/index.ts)
@@ -198,11 +198,11 @@ If you're developing the Dashboard and modifying the reporter package:
 
 ```bash
 # 1. Start Dashboard
-cd ~/Projects/yshvydak-test-dashboard
+cd ~/Projects/test-dashboard
 npm run dev
 
 # 2. Work on reporter (in separate terminal)
-cd ~/Projects/yshvydak-test-dashboard/packages/reporter
+cd ~/Projects/test-dashboard/packages/reporter
 npm run dev  # Watch mode - auto-rebuild on changes
 
 # 3. Publish changes
@@ -218,7 +218,7 @@ npm update playwright-dashboard-reporter
 ### Publishing New Version
 
 ```bash
-cd ~/Projects/yshvydak-test-dashboard/packages/reporter
+cd ~/Projects/test-dashboard/packages/reporter
 
 # Update version (patch/minor/major)
 npm version patch  # 1.0.1 → 1.0.2

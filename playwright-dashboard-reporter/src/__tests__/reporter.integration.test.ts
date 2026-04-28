@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
-import YShvydakReporter from '../index'
+import PlaywrightDashboardReporter from '../index'
 import type {FullConfig, FullResult, Suite, TestCase, TestResult} from '@playwright/test/reporter'
 import * as fs from 'fs'
 
@@ -10,8 +10,8 @@ vi.mock('fs')
 const mockFetch = vi.fn()
 global.fetch = mockFetch as any
 
-describe('YShvydakReporter - Integration Tests', () => {
-    let reporter: YShvydakReporter
+describe('PlaywrightDashboardReporter - Integration Tests', () => {
+    let reporter: PlaywrightDashboardReporter
     let consoleLogSpy: any
     let consoleWarnSpy: any
 
@@ -83,10 +83,10 @@ describe('YShvydakReporter - Integration Tests', () => {
 
     describe('Initialization', () => {
         it('should initialize with default API URL when not provided', () => {
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('YShvydak Dashboard Reporter initialized')
+                expect.stringContaining('Playwright Dashboard Reporter initialized')
             )
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('http://localhost:3001')
@@ -95,7 +95,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should use DASHBOARD_API_URL from environment', () => {
             process.env.DASHBOARD_API_URL = 'http://custom-api:4000'
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('http://custom-api:4000')
@@ -104,7 +104,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should remove trailing /api from DASHBOARD_API_URL', () => {
             process.env.DASHBOARD_API_URL = 'http://custom-api:4000/api'
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('http://custom-api:4000')
@@ -114,7 +114,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should use RUN_ID from environment if provided', () => {
             process.env.RUN_ID = 'test-run-id-123'
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('Run ID: test-run-id-123')
@@ -123,7 +123,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should use RERUN_ID from environment if RUN_ID not provided', () => {
             process.env.RERUN_ID = 'test-rerun-id-456'
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('Run ID: test-rerun-id-456')
@@ -131,7 +131,7 @@ describe('YShvydakReporter - Integration Tests', () => {
         })
 
         it('should generate UUID if neither RUN_ID nor RERUN_ID provided', () => {
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringMatching(/Run ID: [a-f0-9-]{36}/)
@@ -140,7 +140,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should warn when API URL is undefined', () => {
             process.env.DASHBOARD_API_URL = 'undefined'
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 expect.stringContaining('Dashboard API URL not configured')
@@ -149,7 +149,7 @@ describe('YShvydakReporter - Integration Tests', () => {
 
         it('should setup cleanup handlers on initialization', () => {
             const processOnSpy = vi.spyOn(process, 'on')
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function))
             expect(processOnSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function))
@@ -164,7 +164,7 @@ describe('YShvydakReporter - Integration Tests', () => {
                 ok: true,
                 json: async () => ({}),
             })
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
         })
 
         it('should notify dashboard on test run start', () => {
@@ -257,7 +257,7 @@ describe('YShvydakReporter - Integration Tests', () => {
                 ok: true,
                 json: async () => ({}),
             })
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
         })
 
         it('should include captured stdout/stderr in metadata.console', () => {
@@ -414,7 +414,7 @@ describe('YShvydakReporter - Integration Tests', () => {
             const testId1 = JSON.parse(mockFetch.mock.calls[0][1].body).testId
 
             // Create new reporter and run same test
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
             reporter.onTestEnd(testCase, result)
             const testId2 = JSON.parse(mockFetch.mock.calls[1][1].body).testId
 
@@ -476,7 +476,7 @@ describe('YShvydakReporter - Integration Tests', () => {
                 ok: true,
                 json: async () => ({}),
             })
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
         })
 
         it('should send run completion data to API', async () => {
@@ -669,7 +669,7 @@ describe('YShvydakReporter - Integration Tests', () => {
     describe('Enhanced Error Messages', () => {
         beforeEach(() => {
             mockFetch.mockResolvedValue({ok: true})
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
         })
 
         it('should create enhanced error message with code context', () => {
@@ -736,7 +736,7 @@ test('example test', async () => {
     describe('Cleanup Handlers', () => {
         it('should cleanup on SIGINT', async () => {
             mockFetch.mockResolvedValue({ok: true})
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             // Get the SIGINT handler
             const sigintHandler = process.listeners('SIGINT').pop() as () => void
@@ -758,7 +758,7 @@ test('example test', async () => {
 
         it('should handle cleanup errors gracefully', async () => {
             mockFetch.mockRejectedValue(new Error('Network error'))
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             const sigintHandler = process.listeners('SIGINT').pop() as () => void
             sigintHandler()
@@ -781,7 +781,7 @@ test('example test', async () => {
                 json: async () => ({}),
             })
 
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             // 1. Start test run
             const suite = createMockSuite(3)
@@ -832,7 +832,7 @@ test('example test', async () => {
 
             // Verify console output
             expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('YShvydak Dashboard Reporter initialized')
+                expect.stringContaining('Playwright Dashboard Reporter initialized')
             )
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Starting test run'))
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('✅'))
@@ -847,7 +847,7 @@ test('example test', async () => {
         it('should handle API being unavailable throughout entire run', async () => {
             mockFetch.mockRejectedValue(new Error('API not available'))
 
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             // Start run
             const suite = createMockSuite(2)
@@ -883,7 +883,7 @@ test('example test', async () => {
                 return Promise.resolve({ok: true, json: async () => ({})})
             })
 
-            reporter = new YShvydakReporter()
+            reporter = new PlaywrightDashboardReporter()
 
             const suite = createMockSuite(4)
             reporter.onBegin({} as FullConfig, suite)

@@ -33,6 +33,9 @@ export function createTestRoutes(container: ServiceContainer): Router {
     router.delete('/all', testController.clearAllTests)
     router.post('/cleanup', testController.cleanupData)
     router.post('/', testController.createTestResult)
+    // Trace URL is fetched by https://trace.playwright.dev — register before `/:id` so it never
+    // collides with a parameterized route in any Express version.
+    router.get('/traces/:attachmentId', testController.getTraceFile)
     // Nested route must come before single-param route
     router.delete('/:testId/executions/:executionId', testController.deleteExecution)
     router.get('/:id', testController.getTestById)
@@ -51,9 +54,6 @@ export function createTestRoutes(container: ServiceContainer): Router {
     router.post('/:testId/notes/images', uploadSingleImage, noteImageController.uploadImage)
     router.get('/:testId/notes/images', noteImageController.getImages)
     router.delete('/:testId/notes/images/:imageId', noteImageController.deleteImage)
-
-    // Trace file endpoint (no auth middleware - JWT validation in controller)
-    router.get('/traces/:attachmentId', testController.getTraceFile)
 
     return router
 }

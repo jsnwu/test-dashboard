@@ -1,6 +1,6 @@
 # Testing Coverage Plan
 
-> Comprehensive testing strategy and progress tracker for yshvydak-test-dashboard
+> Comprehensive testing strategy and progress tracker for test-dashboard
 >
 > **Last Updated:** 2025-10-23
 > **Overall Target:** 75-80% coverage
@@ -789,7 +789,7 @@ npm run test:ui
 npm run test:coverage
 
 # Specific package
-npm test --workspace=@yshvydak/test-dashboard-server
+npm test --workspace=test-dashboard-server
 ```
 
 ### Creating a New Test

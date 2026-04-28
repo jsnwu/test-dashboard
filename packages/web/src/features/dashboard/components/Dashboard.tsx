@@ -279,7 +279,14 @@ export default function Dashboard() {
                                     tick={{fontSize: 12}}
                                     className="fill-gray-600 dark:fill-gray-400"
                                     tickFormatter={(value) => {
-                                        const date = new Date(value)
+                                        // Backend returns `YYYY-MM-DD`. `new Date('YYYY-MM-DD')`
+                                        // is interpreted as UTC midnight, which shifts the day in
+                                        // non-UTC timezones (e.g. shows "yesterday"). Parse as
+                                        // a local date to keep labels aligned with the DB day.
+                                        const [y, m, d] = String(value)
+                                            .split('-')
+                                            .map((n) => parseInt(n, 10))
+                                        const date = new Date(y, (m || 1) - 1, d || 1)
                                         return `${date.getMonth() + 1}/${date.getDate()}`
                                     }}
                                 />
@@ -295,6 +302,15 @@ export default function Dashboard() {
                                         color: 'white',
                                     }}
                                     labelStyle={{color: 'rgb(156 163 175)'}}
+                                    labelFormatter={(value) => {
+                                        const [y, m, d] = String(value)
+                                            .split('-')
+                                            .map((n) => parseInt(n, 10))
+                                        const date = new Date(y, (m || 1) - 1, d || 1)
+                                        return date.toLocaleDateString(undefined, {
+                                            dateStyle: 'medium',
+                                        })
+                                    }}
                                 />
                                 <Bar
                                     dataKey="passed"

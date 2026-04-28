@@ -23,12 +23,14 @@ function App() {
     const [selectedTest, setSelectedTest] = useState<TestResult | null>(null)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-    // Determine current view from URL
-    const currentView: ViewMode = location.pathname.includes('/dashboard')
-        ? 'dashboard'
-        : location.pathname.includes('/results')
-          ? 'results'
-          : 'tests'
+    // Determine current view from URL (`/` redirects to dashboard)
+    const path = location.pathname
+    const currentView: ViewMode =
+        path === '/' || path.includes('/dashboard')
+            ? 'dashboard'
+            : path.includes('/results')
+              ? 'results'
+              : 'tests'
     const {
         fetchTests,
         fetchRuns,
@@ -248,7 +250,7 @@ function App() {
 
                 <main className="flex-1 overflow-y-auto container mx-auto px-3 md:px-4 py-4 md:py-8">
                     <Routes>
-                        <Route path="/" element={<Navigate to="/tests" replace />} />
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route
                             path="/tests"
                             element={

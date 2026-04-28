@@ -1,4 +1,4 @@
-# @yshvydak/core
+# test-dashboard-core
 
 ## 1.8.0
 

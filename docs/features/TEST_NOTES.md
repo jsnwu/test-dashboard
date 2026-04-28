@@ -574,4 +574,4 @@ Potential improvements (not currently implemented):
 ---
 
 **Last Updated:** January 15, 2025 (v1.3.0 - Added filter support and image support)
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors

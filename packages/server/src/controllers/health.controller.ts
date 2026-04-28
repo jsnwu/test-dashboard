@@ -6,7 +6,7 @@ export class HealthController {
         res.json({
             status: 'ok',
             timestamp: new Date().toISOString(),
-            service: 'yshvydak-test-dashboard-server',
+            service: 'test-dashboard-server',
         })
     }
 }

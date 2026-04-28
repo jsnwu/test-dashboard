@@ -254,11 +254,45 @@ describe('Logger', () => {
             Logger.serverStart(3001)
             expect(consoleLogSpy).toHaveBeenCalledTimes(2) // Two critical logs
             expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('🚀 YShvydak Test Dashboard Server running on port')
+                expect.stringContaining('🚀 Test Dashboard Server running on port')
             )
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('📊 Health check: http://localhost:3001/api/health')
             )
+        })
+    })
+
+    describe('Vitest / NODE_ENV=test (quiet logs)', () => {
+        it('should suppress info, warn, and error unless SERVER_VERBOSE_LOGS=1', () => {
+            process.env.NODE_ENV = 'test'
+            delete process.env.SERVER_VERBOSE_LOGS
+
+            Logger.info('info-msg')
+            Logger.warn('warn-msg')
+            Logger.error('err-msg')
+
+            expect(consoleLogSpy).not.toHaveBeenCalled()
+            expect(consoleWarnSpy).not.toHaveBeenCalled()
+            expect(consoleErrorSpy).not.toHaveBeenCalled()
+        })
+
+        it('should emit error logs when SERVER_VERBOSE_LOGS=1', () => {
+            process.env.NODE_ENV = 'test'
+            process.env.SERVER_VERBOSE_LOGS = '1'
+
+            Logger.error('err-msg')
+
+            expect(consoleErrorSpy).toHaveBeenCalled()
+            delete process.env.SERVER_VERBOSE_LOGS
+        })
+
+        it('should still log critical() in test environment', () => {
+            process.env.NODE_ENV = 'test'
+            delete process.env.SERVER_VERBOSE_LOGS
+
+            Logger.critical('critical-msg')
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('critical-msg'))
         })
     })
 

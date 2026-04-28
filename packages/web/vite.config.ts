@@ -30,7 +30,7 @@ export default defineConfig({
         host: '0.0.0.0', // Listen on all network interfaces
         allowedHosts: true, // Allow all hosts - more permissive approach
         // Alternative specific approach:
-        // allowedHosts: ['test-dashboard.shvydak.com', 'localhost', '127.0.0.1', '.shvydak.com'],
+        // allowedHosts: ['test-dashboard.example.com', 'localhost', '127.0.0.1', '.example.com'],
     },
     preview: {
         // Use the same port configuration for production preview mode

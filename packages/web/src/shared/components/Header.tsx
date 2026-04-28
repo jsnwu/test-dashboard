@@ -199,21 +199,34 @@ export default function Header({
             <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                 Project
             </p>
-            <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className={
-                    fullWidthSelect
-                        ? 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-2 text-gray-700 dark:text-gray-200'
-                        : 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-gray-700 dark:text-gray-200'
-                }>
-                <option value="">All</option>
-                {projects.map((p) => (
-                    <option key={p} value={p}>
-                        {p}
-                    </option>
-                ))}
-            </select>
+            {/*
+             * Keep the selected project visible immediately on refresh even if `/tests/projects`
+             * hasn't loaded yet. Otherwise, a controlled <select> whose value isn't in <option>s
+             * will temporarily display the first option ("All") until options arrive.
+             */}
+            {(() => {
+                const options =
+                    selectedProject && !projects.includes(selectedProject)
+                        ? [selectedProject, ...projects]
+                        : projects
+                return (
+                    <select
+                        value={selectedProject}
+                        onChange={(e) => setSelectedProject(e.target.value)}
+                        className={
+                            fullWidthSelect
+                                ? 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-2 text-gray-700 dark:text-gray-200'
+                                : 'w-full text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-gray-700 dark:text-gray-200'
+                        }>
+                        <option value="">All</option>
+                        {options.map((p) => (
+                            <option key={p} value={p}>
+                                {p}
+                            </option>
+                        ))}
+                    </select>
+                )
+            })()}
         </div>
     )
 

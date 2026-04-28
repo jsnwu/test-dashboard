@@ -287,7 +287,8 @@ export class PlaywrightService implements IPlaywrightService {
             try {
                 // Try to import the reporter for diagnostics
                 const reporterModule = await import(reporterPath)
-                const ReporterClass = reporterModule.default || reporterModule.YShvydakReporter
+                const ReporterClass =
+                    reporterModule.default || reporterModule.PlaywrightDashboardReporter
 
                 if (ReporterClass) {
                     const reporter = new ReporterClass({silent: true})

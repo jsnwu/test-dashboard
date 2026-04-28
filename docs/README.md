@@ -1,6 +1,6 @@
 # Dashboard Documentation
 
-Welcome to the YShvydak Test Dashboard documentation. This guide helps you find the right documentation based on your role and needs.
+Welcome to the Test Dashboard documentation. This guide helps you find the right documentation based on your role and needs.
 
 ## ⚡ 30-Second Context Checklist
 
@@ -189,5 +189,5 @@ Our documentation follows these principles:
 ---
 
 **Last Updated:** October 2025
-**Maintained by:** Yurii Shvydak
+**Maintained by:** test-dashboard contributors
 **For quick AI reference:** See [CLAUDE.md](../CLAUDE.md)
